@@ -2,6 +2,10 @@
 
 A real-time dashboard for visualizing project states maintained by AI agents. Built with Node.js, Express, Socket.io, React, and Tailwind CSS.
 
+## Quick Links
+
+- [Migration Guide](docs/ARCHITECTURE.md#migration-guide) - How to migrate your data between machines
+
 ## Features
 
 - **Real-time Updates**: WebSocket-powered live updates when project states change
@@ -10,6 +14,8 @@ A real-time dashboard for visualizing project states maintained by AI agents. Bu
 - **Decision Tree Visualization**: Mermaid.js powered decision tree rendering
 - **Test Results Dashboard**: Visual overview of generated test results
 - **Docker Ready**: Easy deployment with Docker Compose
+- **Portable Architecture**: SQLite-based persistence with Git sync for cross-machine migration
+- **OpenClaw Integration**: Seamless integration with OpenClaw ecosystem
 
 ## Quick Start
 
@@ -46,6 +52,38 @@ WORKSPACE_DIR=./mock_workspace
 BACKEND_PORT=3001
 FRONTEND_PORT=5173
 ```
+
+### CLI Tool
+
+The dashboard includes a CLI for management:
+
+```bash
+# Start the server
+node backend/bin/pm-dashboard.js start
+
+# Check status
+node backend/bin/pm-dashboard.js status
+
+# Export state for migration
+node backend/bin/pm-dashboard.js export -o backup.json
+
+# Import state
+node backend/bin/pm-dashboard.js import backup.json
+
+# Manage configuration
+node backend/bin/pm-dashboard.js config list
+```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full CLI reference.
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PM_DASHBOARD_PORT` | 3001 | Server port |
+| `PM_DASHBOARD_PROJECTS_DIR` | `~/.openclaw/shared-project` | Projects directory |
+| `PM_DASHBOARD_STATE_FILE` | `~/.openclaw/pm-dashboard/state.db` | SQLite database path |
+| `PM_DASHBOARD_SYNC_ENABLED` | true | Enable Git sync |
 
 ## How It Works
 
@@ -199,13 +237,19 @@ Simply create a new directory under `mock_workspace/` (or your configured worksp
 If the dashboard shows "Disconnected":
 - Check that the backend is running on port 3001
 - Verify CORS settings in `backend/server.js`
-- Check browser console for connection errors
+- Check browser console for connection errorsdocs/ARCHITECTURE.md
 
 ### Projects Not Appearing
 
 - Verify the `WORKSPACE_DIR` in `.env`
 - Check that `.project_state.json` files exist in subdirectories
 - Validate JSON schema matches the expected format
+
+## Documentation
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Comprehensive documentation of the portable architecture, configuration, database schema, CLI reference, and migration guide
+- **[Portable Architecture Design](docs/PORTABLE_ARCHITECTURE.md)** - Design decisions and detailed architecture specification
+- **[Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)** - Step-by-step implementation walkthrough
 
 ## License
 

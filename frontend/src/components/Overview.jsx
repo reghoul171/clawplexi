@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckCircle2, Circle, Loader2, ChevronRight, ChevronDown, Clock, FileText, GitBranch, AlertCircle } from 'lucide-react';
+import { statusLabels } from '../constants/statusConfig';
 
 function Overview({ project }) {
   const [expandedStep, setExpandedStep] = useState(null);
@@ -10,38 +11,18 @@ function Overview({ project }) {
     pending: <Circle className="w-5 h-5 text-gray-500" />
   };
 
-  const statusColors = {
-    done: 'bg-green-500',
-    in_progress: 'bg-yellow-500',
-    pending: 'bg-gray-600'
-  };
-
-  const statusLabels = {
-    done: 'Completed',
-    in_progress: 'In Progress',
-    pending: 'Pending'
-  };
-
   const completedSteps = project.implementation_plan.filter(s => s.status === 'done').length;
   const totalSteps = project.implementation_plan.length;
 
-  // Get related decisions for a step (based on step number or keywords in task)
+  // Get related decisions for a step by searching for matching keywords in task description
   const getRelatedDecisions = (stepItem) => {
-    const stepNum = parseInt(stepItem.step);
-    // Map steps to likely decision categories
-    const stepToDecisionMap = {
-      1: ['arch_choice', 'project_setup'],  // Setup
-      2: ['auth_choice', 'security'],        // Authentication
-      3: ['db_choice', 'database'],          // Database
-      4: ['api_choice', 'api'],              // API
-      5: ['websocket', 'realtime'],          // WebSocket
-      6: ['testing', 'test'],                // Testing
-      7: ['deploy_choice', 'deployment']     // Deployment
-    };
-
-    const relevantKeys = stepToDecisionMap[stepNum] || [];
+    const taskWords = stepItem.task.toLowerCase().split(' ').filter(w => w.length > 3);
     return project.decision_tree.filter(d => 
-      relevantKeys.some(key => d.node_id.includes(key) || d.decision.toLowerCase().includes(key))
+      taskWords.some(word => 
+        d.node_id.toLowerCase().includes(word) || 
+        d.decision.toLowerCase().includes(word) ||
+        d.chosen.toLowerCase().includes(word)
+      )
     );
   };
 
@@ -58,62 +39,25 @@ function Overview({ project }) {
     );
   };
 
-  // Generate step details based on available data
+  // Generate step details based on actual step data only
   const getStepDetails = (stepItem) => {
     const details = [];
     
-    // Add contextual details based on task type
-    if (stepItem.task.toLowerCase().includes('set up') || stepItem.task.toLowerCase().includes('initialize')) {
-      details.push({
-        icon: <FileText className="w-4 h-4" />,
-        label: 'Type',
-        value: 'Project Setup'
-      });
-      details.push({
-        icon: <GitBranch className="w-4 h-4" />,
-        label: 'Branch',
-        value: 'main'
-      });
-    }
-    
-    if (stepItem.task.toLowerCase().includes('auth')) {
-      details.push({
-        icon: <AlertCircle className="w-4 h-4" />,
-        label: 'Priority',
-        value: 'High'
-      });
-    }
-
-    if (stepItem.task.toLowerCase().includes('api')) {
-      details.push({
-        icon: <FileText className="w-4 h-4" />,
-        label: 'Files to Create',
-        value: 'routes/, controllers/, middleware/'
-      });
-    }
-
-    if (stepItem.task.toLowerCase().includes('test')) {
-      details.push({
-        icon: <FileText className="w-4 h-4" />,
-        label: 'Coverage Target',
-        value: '80%'
-      });
-    }
-
-    if (stepItem.task.toLowerCase().includes('deploy')) {
-      details.push({
-        icon: <GitBranch className="w-4 h-4" />,
-        label: 'Environment',
-        value: 'Production'
-      });
-    }
-
-    // Add timestamp info
+    // Only show status from actual data
     details.push({
       icon: <Clock className="w-4 h-4" />,
       label: 'Status',
       value: statusLabels[stepItem.status]
     });
+
+    // Show step number if available
+    if (stepItem.step) {
+      details.push({
+        icon: <FileText className="w-4 h-4" />,
+        label: 'Step',
+        value: stepItem.step
+      });
+    }
 
     return details;
   };

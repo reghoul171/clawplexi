@@ -1,14 +1,103 @@
-import { CheckCircle, XCircle, FileCode } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle, XCircle, FileCode, Plus, Play, FileText, Loader2, CheckCircle2, XCircle as XCircleIcon, X } from 'lucide-react';
+import { useTesterAgent } from '../hooks/useTesterAgent';
 
 function Tests({ project }) {
+  const { loading, error, lastResult, createTests, runTests, generateReport, clearError, clearResult } = useTesterAgent();
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
+  const handleCreateTests = async () => {
+    try {
+      const result = await createTests(project.project_name);
+      showToast(result.message || 'Tester agent spawned to create new tests', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to spawn tester agent', 'error');
+    }
+  };
+
+  const handleRunTests = async () => {
+    try {
+      const result = await runTests(project.project_name);
+      showToast(result.message || 'Tester agent spawned to run all tests', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to spawn tester agent', 'error');
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    try {
+      const result = await generateReport(project.project_name);
+      showToast(result.message || 'Tester agent spawned to generate report', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to spawn tester agent', 'error');
+    }
+  };
+
   if (!project.tests_generated || project.tests_generated.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <FileCode className="w-5 h-5 text-blue-400" />
-          <h3 className="text-lg font-semibold text-white">Test Results</h3>
+      <div className="space-y-6">
+        {/* Action Buttons */}
+        <div className="bg-gray-800 rounded-xl p-4">
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleCreateTests}
+              disabled={loading.createTests}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              {loading.createTests ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              <span>Generate New Tests</span>
+            </button>
+            
+            <button
+              onClick={handleRunTests}
+              disabled={loading.runTests}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              {loading.runTests ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+              <span>Run All Tests</span>
+            </button>
+            
+            <button
+              onClick={handleGenerateReport}
+              disabled={loading.generateReport}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            >
+              {loading.generateReport ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              <span>Generate Report</span>
+            </button>
+          </div>
         </div>
-        <p className="text-gray-400">No tests generated yet.</p>
+
+        {/* Empty State */}
+        <div className="bg-gray-800 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <FileCode className="w-5 h-5 text-blue-400" />
+            <h3 className="text-lg font-semibold text-white">Test Results</h3>
+          </div>
+          <p className="text-gray-400">No tests generated yet. Click "Generate New Tests" to create tests for this project.</p>
+        </div>
+
+        {/* Toast Notification */}
+        {toast && (
+          <Toast toast={toast} onClose={() => setToast(null)} />
+        )}
       </div>
     );
   }
@@ -19,6 +108,50 @@ function Tests({ project }) {
 
   return (
     <div className="space-y-6">
+      {/* Action Buttons */}
+      <div className="bg-gray-800 rounded-xl p-4">
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleCreateTests}
+            disabled={loading.createTests}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+          >
+            {loading.createTests ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+            <span>Generate New Tests</span>
+          </button>
+          
+          <button
+            onClick={handleRunTests}
+            disabled={loading.runTests}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+          >
+            {loading.runTests ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            <span>Run All Tests</span>
+          </button>
+          
+          <button
+            onClick={handleGenerateReport}
+            disabled={loading.generateReport}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+          >
+            {loading.generateReport ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4" />
+            )}
+            <span>Generate Report</span>
+          </button>
+        </div>
+      </div>
+
       {/* Test Summary */}
       <div className="bg-gray-800 rounded-xl p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -100,6 +233,34 @@ function Tests({ project }) {
           </tbody>
         </table>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast toast={toast} onClose={() => setToast(null)} />
+      )}
+    </div>
+  );
+}
+
+function Toast({ toast, onClose }) {
+  return (
+    <div className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+      toast.type === 'success' 
+        ? 'bg-green-600 text-white' 
+        : 'bg-red-600 text-white'
+    }`}>
+      {toast.type === 'success' ? (
+        <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+      ) : (
+        <XCircleIcon className="w-5 h-5 flex-shrink-0" />
+      )}
+      <span className="text-sm">{toast.message}</span>
+      <button
+        onClick={onClose}
+        className="ml-2 hover:opacity-75 transition-opacity"
+      >
+        <X className="w-4 h-4" />
+      </button>
     </div>
   );
 }
