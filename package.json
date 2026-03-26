@@ -1,0 +1,27 @@
+{
+  "name": "openclaw-pm-dashboard",
+  "version": "1.0.0",
+  "description": "AI Project Manager Dashboard - Visualizer for project states maintained by AI agents",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "ai",
+    "project-manager",
+    "dashboard",
+    "websocket",
+    "real-time"
+  ],
+  "author": "OpenClaw",
+  "license": "MIT"
+}

@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    volumes:
+      - ${WORKSPACE_DIR:-./mock_workspace}:/app/workspace:ro
+    environment:
+      - WORKSPACE_DIR=/app/workspace
+      - PORT=3001
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      - VITE_API_URL=http://localhost:${BACKEND_PORT:-3001}
+    depends_on:
+      - backend
+    restart: unless-stopped
