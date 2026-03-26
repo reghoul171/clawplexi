@@ -255,6 +255,45 @@ function initSync() {
 }
 
 // =============================================================================
+// STATIC FILE SERVING (Frontend)
+// =============================================================================
+
+/**
+ * Serve frontend static files
+ */
+function serveFrontend() {
+  // Find frontend dist directory
+  const possiblePaths = [
+    path.join(__dirname, '..', 'frontend', 'dist'),
+    path.join(__dirname, 'frontend', 'dist'),
+    path.join(__dirname, '..', 'dist')
+  ];
+  
+  let frontendPath = null;
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      frontendPath = p;
+      break;
+    }
+  }
+  
+  if (frontendPath) {
+    console.log(`[Server] Serving frontend from: ${frontendPath}`);
+    app.use(express.static(frontendPath));
+    
+    // SPA fallback - serve index.html for non-API routes
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    });
+  } else {
+    console.log('[Server] No frontend found - running in API-only mode');
+  }
+}
+
+// =============================================================================
 // API ROUTES
 // =============================================================================
 
@@ -530,7 +569,7 @@ async function shutdown(signal) {
 async function start() {
   try {
     console.log('========================================');
-    console.log('     PM Dashboard Server v1.0.0        ');
+    console.log('     PM Dashboard Server v1.0.1        ');
     console.log('========================================');
     console.log('');
     
@@ -552,6 +591,9 @@ async function start() {
     // Initialize sync
     console.log('[Sync] Initializing...');
     initSync();
+    
+    // Serve frontend static files
+    serveFrontend();
     
     // Start HTTP server
     server.listen(PORT, HOST, () => {

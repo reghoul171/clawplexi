@@ -1,6 +1,9 @@
 ---
 name: pm-dashboard
 description: Real-time dashboard for visualizing AI agent project states including implementation progress, decision trees, and test results. Use when setting up project visualization, checking project status, or managing the dashboard lifecycle. Commands: install, start, stop, status, config, export, import.
+metadata:
+  clawdbot:
+    emoji: "📊"
 ---
 
 # PM Dashboard
