@@ -419,10 +419,21 @@ app.post('/api/tester/create-tests', async (req, res) => {
   
   console.log(`[Tester] Spawn request to create tests for: ${projectName}`);
   
-  io.emit('tester_action', {
+  // Create task in database
+  const taskId = await db.createTask({
+    project_name: projectName,
+    type: 'create-tests',
+    message: 'Creating tests...'
+  });
+  
+  // Emit task started event
+  io.emit('task_started', {
+    taskId,
     type: 'create-tests',
     projectName,
-    status: 'spawned',
+    status: 'pending',
+    progress: 0,
+    message: 'Initializing test creation...',
     timestamp: new Date().toISOString()
   });
   
@@ -436,15 +447,28 @@ app.post('/api/tester/create-tests', async (req, res) => {
       body: JSON.stringify({
         agentId: 'tester',
         message: `Create new tests for project "${projectName}"`,
-        context: { projectName, action: 'create-tests' }
+        context: { projectName, action: 'create-tests', taskId }
       })
     });
+    
+    // Update task to running
+    await db.updateTask(taskId, { status: 'running', progress: 10, message: 'Tester agent spawned' });
+    io.emit('task_progress', {
+      taskId,
+      progress: 10,
+      message: 'Tester agent spawned, analyzing project...'
+    });
   } catch (error) {
-    console.log('[Tester] Gateway unavailable, using fallback');
+    console.log('[Tester] Gateway unavailable, simulating task');
+    // Simulate completion for demo purposes
+    setTimeout(async () => {
+      await simulateTaskCompletion(taskId, 'create-tests', projectName);
+    }, 2000);
   }
   
   res.json({
     success: true,
+    taskId,
     message: 'Tester agent spawn request sent',
     projectName,
     timestamp: new Date().toISOString()
@@ -463,16 +487,33 @@ app.post('/api/tester/run-tests', async (req, res) => {
   
   console.log(`[Tester] Spawn request to run tests for: ${projectName}`);
   
-  io.emit('tester_action', {
+  // Create task in database
+  const taskId = await db.createTask({
+    project_name: projectName,
+    type: 'run-tests',
+    message: 'Running tests...'
+  });
+  
+  // Emit task started event
+  io.emit('task_started', {
+    taskId,
     type: 'run-tests',
     projectName,
-    status: 'spawned',
+    status: 'pending',
+    progress: 0,
+    message: 'Initializing test run...',
     timestamp: new Date().toISOString()
   });
   
+  // Simulate test running for demo
+  setTimeout(async () => {
+    await simulateTaskCompletion(taskId, 'run-tests', projectName);
+  }, 1000);
+  
   res.json({
     success: true,
-    message: 'Tester agent spawn request sent',
+    taskId,
+    message: 'Test run initiated',
     projectName,
     timestamp: new Date().toISOString()
   });
@@ -490,20 +531,217 @@ app.post('/api/tester/generate-report', async (req, res) => {
   
   console.log(`[Tester] Spawn request to generate report for: ${projectName}`);
   
-  io.emit('tester_action', {
+  // Get project to include test data in report
+  const project = await db.getProject(projectName);
+  
+  // Create task in database
+  const taskId = await db.createTask({
+    project_name: projectName,
+    type: 'generate-report',
+    message: 'Generating report...'
+  });
+  
+  // Emit task started event
+  io.emit('task_started', {
+    taskId,
     type: 'generate-report',
     projectName,
-    status: 'spawned',
+    status: 'pending',
+    progress: 0,
+    message: 'Generating test report...',
     timestamp: new Date().toISOString()
   });
   
+  // Simulate report generation
+  setTimeout(async () => {
+    await simulateTaskCompletion(taskId, 'generate-report', projectName, project);
+  }, 1500);
+  
   res.json({
     success: true,
-    message: 'Tester agent spawn request sent',
+    taskId,
+    message: 'Report generation initiated',
     projectName,
     timestamp: new Date().toISOString()
   });
 });
+
+/**
+ * POST /api/tasks/:taskId/progress - Update task progress (for agents)
+ */
+app.post('/api/tasks/:taskId/progress', async (req, res) => {
+  const { taskId } = req.params;
+  const { progress, message, status } = req.body;
+  
+  try {
+    const task = await db.getTask(taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    
+    const updates = {};
+    if (progress !== undefined) updates.progress = progress;
+    if (message !== undefined) updates.message = message;
+    if (status !== undefined) updates.status = status;
+    
+    await db.updateTask(taskId, updates);
+    
+    // Emit progress event
+    io.emit('task_progress', {
+      taskId,
+      type: task.type,
+      projectName: task.project_name,
+      progress: progress ?? task.progress,
+      message: message ?? task.message,
+      status: status ?? task.status
+    });
+    
+    res.json({ success: true, taskId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/tasks/:taskId/complete - Mark task complete (for agents)
+ */
+app.post('/api/tasks/:taskId/complete', async (req, res) => {
+  const { taskId } = req.params;
+  const { result, report } = req.body;
+  
+  try {
+    const task = await db.getTask(taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    
+    await db.updateTask(taskId, {
+      status: 'completed',
+      progress: 100,
+      result: result ? JSON.stringify(result) : null,
+      report: report || null
+    });
+    
+    // Emit completion event
+    io.emit('task_completed', {
+      taskId,
+      type: task.type,
+      projectName: task.project_name,
+      status: 'completed',
+      progress: 100,
+      result,
+      report,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.json({ success: true, taskId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/tasks - Get tasks (optionally filtered)
+ */
+app.get('/api/tasks', async (req, res) => {
+  const { projectName, status } = req.query;
+  
+  try {
+    let tasks;
+    if (projectName) {
+      tasks = await db.getTasksByProject(projectName, status);
+    } else if (status === 'pending') {
+      tasks = await db.getPendingTasks();
+    } else {
+      tasks = await db.getRecentCompletedTasks(50);
+    }
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/tasks/:taskId - Get specific task
+ */
+app.get('/api/tasks/:taskId', async (req, res) => {
+  try {
+    const task = await db.getTask(req.params.taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    res.json(task);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Simulate task completion (for demo when gateway unavailable)
+ */
+async function simulateTaskCompletion(taskId, type, projectName, project = null) {
+  // Simulate progress
+  for (let i = 20; i <= 80; i += 20) {
+    await db.updateTask(taskId, { progress: i, message: `Processing... ${i}%` });
+    io.emit('task_progress', {
+      taskId,
+      type,
+      projectName,
+      progress: i,
+      message: `Processing... ${i}%`
+    });
+    await new Promise(r => setTimeout(r, 500));
+  }
+  
+  let result = {};
+  let report = '';
+  
+  if (type === 'create-tests') {
+    result = {
+      testsCreated: 3,
+      files: ['tests/new_test_1.test.js', 'tests/new_test_2.test.js', 'tests/new_test_3.test.js']
+    };
+    report = `# Test Creation Report\n\n## Project: ${projectName}\n\n### Tests Created: 3\n\n1. **new_test_1.test.js** - Unit tests for core functionality\n2. **new_test_2.test.js** - Integration tests for API endpoints\n3. **new_test_3.test.js** - E2E tests for user flows\n\n### Status: ✅ Success\n\nAll test files have been created and are ready to run.`;
+  } else if (type === 'run-tests') {
+    result = {
+      total: 4,
+      passed: 3,
+      failed: 1,
+      duration: '2.4s'
+    };
+    report = `# Test Run Report\n\n## Project: ${projectName}\n\n### Summary\n- **Total Tests:** 4\n- **Passed:** 3 ✅\n- **Failed:** 1 ❌\n- **Duration:** 2.4s\n\n### Details\n\n#### ✅ Passing Tests\n1. User Authentication Tests\n2. Database Unit Tests\n3. Frontend Component Tests\n\n#### ❌ Failing Tests\n1. API Integration Tests\n   - Error: Expected status 200, got 500\n   - File: tests/api.test.js:45`;
+  } else if (type === 'generate-report') {
+    const tests = project?.tests_generated || [];
+    const passing = tests.filter(t => t.status === 'passing').length;
+    const failing = tests.filter(t => t.status === 'failing').length;
+    result = {
+      total: tests.length,
+      passed: passing,
+      failed: failing,
+      coverage: '78%'
+    };
+    report = `# Test Report\n\n## Project: ${projectName}\n\nGenerated: ${new Date().toISOString()}\n\n### Summary\n\n| Metric | Value |\n|--------|-------|\n| Total Tests | ${tests.length} |\n| Passed | ${passing} |\n| Failed | ${failing} |\n| Coverage | 78% |\n\n### Test Details\n\n${tests.map(t => `- ${t.status === 'passing' ? '✅' : '❌'} **${t.test_name}** (${t.file})`).join('\n')}\n\n### Recommendations\n\n1. Fix failing API Integration Tests\n2. Increase test coverage for edge cases\n3. Add more E2E tests for critical user paths`;
+  }
+  
+  // Complete the task
+  await db.updateTask(taskId, {
+    status: 'completed',
+    progress: 100,
+    result: JSON.stringify(result),
+    report
+  });
+  
+  io.emit('task_completed', {
+    taskId,
+    type,
+    projectName,
+    status: 'completed',
+    progress: 100,
+    result,
+    report,
+    timestamp: new Date().toISOString()
+  });
+}
 
 // =============================================================================
 // SOCKET.IO

@@ -2,19 +2,61 @@ import { useState, useEffect, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import Sidebar from './components/Sidebar';
-import Overview from './components/Overview';
-import DecisionTree from './components/DecisionTree';
+import ListView from './components/ListView';
+import BoardView from './components/BoardView';
+import TimelineView from './components/TimelineView';
 import Tests from './components/Tests';
+import ViewSwitcher from './components/ViewSwitcher';
 import ErrorBoundary from './components/ErrorBoundary';
 import { API_URL } from './config/api';
 
 function App() {
   const [projects, setProjects] = useState([]);
   const [activeProject, setActiveProject] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  // Initialize activeView from localStorage, default to 'list'
+  const [activeView, setActiveView] = useState(() => {
+    const stored = localStorage.getItem('pm-dashboard-active-view');
+    return stored || 'list';
+  });
   const [connected, setConnected] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Persist activeView to localStorage
+  useEffect(() => {
+    localStorage.setItem('pm-dashboard-active-view', activeView);
+  }, [activeView]);
+
+  // Keyboard shortcuts for view switching (Alt+1/2/3/4)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey) {
+        switch (e.key) {
+          case '1':
+            e.preventDefault();
+            setActiveView('list');
+            break;
+          case '2':
+            e.preventDefault();
+            setActiveView('board');
+            break;
+          case '3':
+            e.preventDefault();
+            setActiveView('timeline');
+            break;
+          case '4':
+            e.preventDefault();
+            setActiveView('tests');
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const fetchProjects = useCallback(() => {
     setLoading(true);
@@ -93,14 +135,24 @@ function App() {
     return () => socket.disconnect();
   }, [activeProject, fetchProjects, projects]);
 
-  const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'decision-tree', label: 'Decision Tree' },
-    { id: 'tests', label: 'Tests' }
-  ];
-
   const handleRetry = () => {
     fetchProjects();
+  };
+
+  // Render the active view content
+  const renderViewContent = () => {
+    switch (activeView) {
+      case 'list':
+        return <ListView project={activeProject} />;
+      case 'board':
+        return <BoardView project={activeProject} />;
+      case 'timeline':
+        return <TimelineView project={activeProject} />;
+      case 'tests':
+        return <Tests project={activeProject} />;
+      default:
+        return <ListView project={activeProject} />;
+    }
   };
 
   // Show error state with retry button
@@ -148,14 +200,26 @@ function App() {
         <main className="flex-1 flex flex-col overflow-hidden">
           {activeProject ? (
             <>
+              {/* Header with ViewSwitcher */}
               <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold text-white">{activeProject.project_name}</h1>
-                    <span className="inline-block mt-2 px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
-                      {activeProject.editor_used}
-                    </span>
+                  {/* Project Name */}
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <h1 className="text-2xl font-bold text-white">{activeProject.project_name}</h1>
+                      <span className="inline-block mt-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
+                        {activeProject.editor_used}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* ViewSwitcher */}
+                  <ViewSwitcher 
+                    activeView={activeView} 
+                    onViewChange={setActiveView} 
+                  />
+
+                  {/* Connection Status */}
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></span>
                     <span className="text-sm text-gray-400">
@@ -165,28 +229,9 @@ function App() {
                 </div>
               </header>
 
-              <nav className="bg-gray-800 border-b border-gray-700 px-6">
-                <div className="flex space-x-1">
-                  {tabs.map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-4 py-3 text-sm font-medium transition-colors ${
-                        activeTab === tab.id
-                          ? 'text-blue-400 border-b-2 border-blue-400'
-                          : 'text-gray-400 hover:text-gray-200'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-              </nav>
-
+              {/* View Content */}
               <div className="flex-1 overflow-auto p-6">
-                {activeTab === 'overview' && <Overview project={activeProject} />}
-                {activeTab === 'decision-tree' && <DecisionTree project={activeProject} />}
-                {activeTab === 'tests' && <Tests project={activeProject} />}
+                {renderViewContent()}
               </div>
             </>
           ) : (
