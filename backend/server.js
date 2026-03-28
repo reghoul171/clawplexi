@@ -48,7 +48,14 @@ const io = new Server(server, {
   cors: {
     origin: config.server.corsOrigins,
     methods: ['GET', 'POST']
-  }
+  },
+  // Enable polling fallback for tunnel/proxy compatibility
+  transports: ['polling', 'websocket'],
+  // Allow upgrading to websocket after polling establishes connection
+  allowUpgrades: true,
+  // Increase ping timeout for slow connections through tunnels
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 const PORT = config.server.port;
@@ -58,13 +65,88 @@ const HOST = config.server.host;
 // MIDDLEWARE
 // =============================================================================
 
-app.use(cors({ origin: config.server.corsOrigins }));
+/**
+ * Dynamic CORS origin checker
+ * Supports exact matches, patterns, and development mode
+ */
+function getCorsOriginHandler(config) {
+  return (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // In development mode with corsAllowAllInDev, allow all origins
+    if (config.server.corsAllowAllInDev && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // Check exact matches
+    if (config.server.corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Check pattern matches (e.g., *.trycloudflare.com)
+    const patterns = config.server.corsOriginPatterns || [];
+    for (const pattern of patterns) {
+      if (origin.endsWith(pattern) || origin.includes(pattern)) {
+        return callback(null, true);
+      }
+    }
+    
+    // Origin not allowed
+    callback(new Error('Not allowed by CORS'));
+  };
+}
+
+app.use(cors({ 
+  origin: getCorsOriginHandler(config),
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Request logging
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
+});
+
+// =============================================================================
+// ERROR HANDLING
+// =============================================================================
+
+/**
+ * Global error handler for JSON parsing and other errors
+ * Prevents stack trace exposure in production
+ */
+app.use((err, req, res, next) => {
+  // Log error for debugging
+  console.error('[Error]', err.message);
+  
+  // Handle JSON parsing errors
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      error: 'Invalid JSON',
+      message: 'Request body contains malformed JSON'
+    });
+  }
+  
+  // Handle CORS errors
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: 'Origin not allowed'
+    });
+  }
+  
+  // Generic error response (hide details in production)
+  const isDev = process.env.NODE_ENV !== 'production';
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+    ...(isDev && { stack: err.stack })
+  });
 });
 
 // =============================================================================
@@ -316,7 +398,14 @@ app.get('/api/projects', async (req, res) => {
  */
 app.get('/api/projects/:name', async (req, res) => {
   try {
-    const project = await db.getProject(req.params.name);
+    const { name } = req.params;
+    
+    // Validate project name is not empty
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: 'Project name cannot be empty' });
+    }
+    
+    const project = await db.getProject(name);
     if (project) {
       res.json(project);
     } else {
@@ -329,12 +418,17 @@ app.get('/api/projects/:name', async (req, res) => {
 });
 
 /**
- * PATCH /api/projects/:name/steps/:stepNumber/status
- * Update step status via REST API
+ * PATCH/PUT /api/projects/:name/steps/:stepNumber/status
+ * Update step status via REST API (supports both PATCH and PUT)
  */
-app.patch('/api/projects/:name/steps/:stepNumber/status', async (req, res) => {
+const handleStepStatusUpdate = async (req, res) => {
   const { name, stepNumber } = req.params;
   const { status } = req.body;
+  
+  // Validate project name is not empty
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ error: 'Project name cannot be empty' });
+  }
   
   // Validate status
   const validStatuses = ['pending', 'in_progress', 'done'];
@@ -403,7 +497,10 @@ app.patch('/api/projects/:name/steps/:stepNumber/status', async (req, res) => {
     console.error('[API] Error updating step status:', error);
     res.status(500).json({ error: error.message });
   }
-});
+};
+
+app.patch('/api/projects/:name/steps/:stepNumber/status', handleStepStatusUpdate);
+app.put('/api/projects/:name/steps/:stepNumber/status', handleStepStatusUpdate);
 
 /**
  * GET /api/health - Health check
@@ -887,6 +984,57 @@ io.on('connection', async (socket) => {
   
   socket.on('disconnect', () => {
     console.log(`[Socket] Client disconnected: ${socket.id}`);
+  });
+});
+
+// =============================================================================
+// ERROR HANDLING
+// =============================================================================
+
+/**
+ * Global error handler - sanitizes errors in production
+ */
+app.use((err, req, res, next) => {
+  // Log error for debugging
+  console.error('[Error]', err.message);
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('[Error Stack]', err.stack);
+  }
+  
+  // Handle JSON parsing errors
+  if (err.type === 'entity.parse.failed' || err instanceof SyntaxError) {
+    return res.status(400).json({
+      error: 'Invalid JSON in request body',
+      message: 'Request body contains malformed JSON'
+    });
+  }
+  
+  // Handle CORS errors
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      error: 'CORS policy violation',
+      message: 'Origin not allowed'
+    });
+  }
+  
+  // Production: sanitize error details
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  res.status(err.status || err.statusCode || 500).json({
+    error: isProduction ? 'Internal server error' : err.message,
+    message: isProduction ? 'An unexpected error occurred' : (err.message || 'Unknown error'),
+    // Never expose stack traces in production
+    ...(isProduction ? {} : { stack: err.stack })
+  });
+});
+
+/**
+ * 404 handler for undefined API routes
+ */
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    error: 'Not found',
+    message: `API endpoint ${req.method} ${req.path} not found`
   });
 });
 

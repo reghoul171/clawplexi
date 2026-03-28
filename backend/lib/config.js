@@ -17,7 +17,11 @@ const DEFAULT_CONFIG = {
   server: {
     port: 3001,
     host: 'localhost',
-    corsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173']
+    corsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    // In development, allow all origins or match patterns
+    corsAllowAllInDev: true,
+    // Patterns for dynamic origin matching (e.g., tunnel URLs)
+    corsOriginPatterns: ['.trycloudflare.com', '.loca.lt', '.ngrok.io', '.ngrok-free.app']
   },
   frontend: {
     port: 5173,
@@ -61,6 +65,8 @@ const ENV_MAPPINGS = {
   'PM_DASHBOARD_PORT': { path: 'server.port', type: 'number' },
   'PM_DASHBOARD_HOST': { path: 'server.host', type: 'string' },
   'PM_DASHBOARD_CORS_ORIGINS': { path: 'server.corsOrigins', type: 'array' },
+  'PM_DASHBOARD_CORS_ALLOW_ALL': { path: 'server.corsAllowAllInDev', type: 'boolean' },
+  'PM_DASHBOARD_CORS_PATTERNS': { path: 'server.corsOriginPatterns', type: 'array' },
   'PM_DASHBOARD_FRONTEND_PORT': { path: 'frontend.port', type: 'number' },
   'PM_DASHBOARD_API_URL': { path: 'frontend.apiUrl', type: 'string' },
   'PM_DASHBOARD_PROJECTS_DIR': { path: 'paths.projectsDir', type: 'string' },
