@@ -267,6 +267,96 @@ npm run dev:backend   # Backend on port 3001
 npm run dev:frontend  # Frontend on port 5173
 ```
 
+## Tunnel Access (Remote Development)
+
+The dashboard supports access via tunnel services like Cloudflare Tunnel, ngrok, or localtunnel. This is useful for:
+
+- Remote development and testing
+- Sharing the dashboard with team members
+- Mobile access during development
+
+### Supported Tunnel Services
+
+| Service | Pattern | Notes |
+|---------|---------|-------|
+| Cloudflare Tunnel | `*.trycloudflare.com` | Recommended - fast and reliable |
+| ngrok | `*.ngrok.io`, `*.ngrok-free.app` | Popular option |
+| localtunnel | `*.loca.lt` | Free and simple |
+
+### Setup Instructions
+
+#### 1. Cloudflare Tunnel (Recommended)
+
+```bash
+# Install cloudflared if not already installed
+# macOS: brew install cloudflared
+# Linux: See https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+
+# Start the backend
+cd backend && npm start &
+
+# Expose the backend via tunnel (port 3001)
+cloudflared tunnel --url http://localhost:3001 &
+BACKEND_URL=$(curl -s https://loca.lt/mytunnelip 2>/dev/null || echo "check-cloudflare-output")
+
+# Start the frontend with the tunnel URL
+cd frontend && VITE_API_URL=https://your-tunnel-url.trycloudflare.com npm run dev
+
+# Expose frontend (in another terminal)
+cloudflared tunnel --url http://localhost:5173
+```
+
+#### 2. ngrok
+
+```bash
+# Start ngrok for backend
+ngrok http 3001
+
+# In another terminal, start ngrok for frontend
+ngrok http 5173
+
+# Update frontend environment to use backend tunnel URL
+VITE_API_URL=https://your-backend-tunnel.ngrok.io npm run dev
+```
+
+### Configuration for Tunnels
+
+The backend automatically accepts requests from these origin patterns (configured in `backend/lib/config.js`):
+
+```javascript
+corsOriginPatterns: ['.trycloudflare.com', '.loca.lt', '.ngrok.io', '.ngrok-free.app']
+```
+
+To add custom tunnel domains, set the environment variable:
+
+```bash
+export PM_DASHBOARD_CORS_PATTERNS=".mytunnel.com,.custom-tunnel.io"
+```
+
+### Tunnel Compatibility Features
+
+The dashboard includes several features for reliable tunnel operation:
+
+1. **Socket.IO Polling Fallback**: WebSockets can be unreliable through tunnels. The server automatically falls back to HTTP polling:
+
+   ```javascript
+   // backend/server.js
+   transports: ['polling', 'websocket'],
+   allowUpgrades: true,
+   pingTimeout: 60000  // Extended for slow tunnel connections
+   ```
+
+2. **Dynamic CORS**: Origin validation supports pattern matching for dynamic tunnel URLs
+
+3. **Frontend Host Allowlist**: Vite is configured to accept requests from tunnel domains:
+
+   ```javascript
+   // frontend/vite.config.js
+   server: {
+     allowedHosts: ['.trycloudflare.com']
+   }
+   ```
+
 ## Configuration
 
 Edit `.env` in the root directory:
@@ -435,7 +525,90 @@ The following optional fields enhance the Overview tab display:
 
 The dashboard handles both old and new schema formats. If your `.project_state.json` files were created with a `metadata` wrapper object, the `normalizeProject.js` utility extracts optional fields from `metadata` as a fallback.
 
-## Usage for AI Agents (OpenClaw)
+## Agent Integration
+
+### OpenClaw Agent Workflow
+
+The dashboard integrates with OpenClaw's agent ecosystem for automated project management:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     OpenClaw Agent Workflow                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Manager → Researcher → Architect → Planner → Developer         │
+│                                                      │           │
+│                                                      ▼           │
+│               Tester → Reviewer → Client → Documenter            │
+│                          │              │                        │
+│                          │              │                        │
+│                          └──────────────┘                        │
+│                         (Feedback Loop)                          │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Client Agent Role
+
+The Client agent is a **misuse specialist** that validates the dashboard:
+
+- **Real-world Usage Simulation**: Tests the dashboard as a real user would
+- **Misuse Testing**: Attempts to break, confuse, or find gaps in the application
+- **Edge Case Coverage**: Tests boundary conditions, invalid inputs, and error states
+- **UX Validation**: Evaluates user experience and accessibility
+- **Security Testing**: Probes for common vulnerabilities
+
+#### Client Agent Testing Results
+
+After the tunnel compatibility implementation, the Client agent performed comprehensive testing:
+
+| Test Category | Status | Notes |
+|--------------|--------|-------|
+| Real-time Updates | ✅ Pass | WebSocket updates via tunnel with polling fallback |
+| CORS Validation | ✅ Pass | Tunnel URLs properly accepted |
+| Error Handling | ✅ Pass | No stack traces exposed |
+| Input Validation | ✅ Pass | Empty names and invalid statuses rejected |
+| API Endpoints | ✅ Pass | All endpoints responding correctly |
+| Tunnel Compatibility | ✅ Pass | Full functionality through Cloudflare tunnel |
+
+### Tester Agent Integration
+
+The dashboard provides API endpoints for spawning tester agents:
+
+```bash
+# Create new tests for a project
+curl -X POST http://localhost:3001/api/tester/create-tests \
+  -H "Content-Type: application/json" \
+  -d '{"projectName": "MyProject"}'
+
+# Run tests
+curl -X POST http://localhost:3001/api/tester/run-tests \
+  -H "Content-Type: application/json" \
+  -d '{"projectName": "MyProject"}'
+
+# Generate test report
+curl -X POST http://localhost:3001/api/tester/generate-report \
+  -H "Content-Type: application/json" \
+  -d '{"projectName": "MyProject"}'
+```
+
+### Task Progress Tracking
+
+Agents can report progress through the task API:
+
+```bash
+# Update task progress
+curl -X POST http://localhost:3001/api/tasks/{taskId}/progress \
+  -H "Content-Type: application/json" \
+  -d '{"progress": 50, "message": "Running tests...", "status": "running"}'
+
+# Mark task complete
+curl -X POST http://localhost:3001/api/tasks/{taskId}/complete \
+  -H "Content-Type: application/json" \
+  -d '{"result": {"passed": 5, "failed": 0}, "report": "All tests passed"}'
+```
+
+### Writing Project States
 
 When working on a project, OpenClaw should:
 
@@ -482,7 +655,36 @@ The dashboard will automatically detect the new project and display it.
 |----------|--------|-------------|
 | `/api/projects` | GET | List all tracked projects |
 | `/api/projects/:name` | GET | Get a specific project by name |
+| `/api/projects/:name/steps/:stepNumber/status` | PATCH, PUT | Update step status (supports both methods) |
 | `/api/health` | GET | Health check endpoint |
+| `/api/stats` | GET | Dashboard statistics |
+| `/api/sync/status` | GET | Git sync status |
+| `/api/sync/trigger` | POST | Manually trigger git sync |
+| `/api/tasks` | GET | List tasks (optional `?projectName=` and `?status=` filters) |
+| `/api/tasks/:taskId` | GET | Get specific task details |
+| `/api/tasks/:taskId/progress` | POST | Update task progress (for agent integration) |
+| `/api/tasks/:taskId/complete` | POST | Mark task complete (for agent integration) |
+| `/api/tester/create-tests` | POST | Spawn tester agent to create tests |
+| `/api/tester/run-tests` | POST | Run all tests for a project |
+| `/api/tester/generate-report` | POST | Generate test report |
+
+### Step Status Update
+
+Update the status of an implementation step via REST API:
+
+```bash
+# Using PATCH (preferred)
+curl -X PATCH http://localhost:3001/api/projects/MyProject/steps/1/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "done"}'
+
+# Using PUT (alternative)
+curl -X PUT http://localhost:3001/api/projects/MyProject/steps/1/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress"}'
+```
+
+Valid statuses: `pending`, `in_progress`, `done`
 
 ## WebSocket Events
 
@@ -511,13 +713,59 @@ Simply create a new directory under `mock_workspace/` (or your configured worksp
 If the dashboard shows "Disconnected":
 - Check that the backend is running on port 3001
 - Verify CORS settings in `backend/server.js`
-- Check browser console for connection errorsdocs/ARCHITECTURE.md
+- Check browser console for connection errors
 
 ### Projects Not Appearing
 
 - Verify the `WORKSPACE_DIR` in `.env`
 - Check that `.project_state.json` files exist in subdirectories
 - Validate JSON schema matches the expected format
+
+## Security
+
+### Error Handling
+
+The dashboard implements comprehensive error handling to prevent information leakage:
+
+1. **Global Error Handler**: All errors are caught and sanitized before being sent to clients
+2. **Stack Trace Protection**: Stack traces are only exposed in development mode (`NODE_ENV !== 'production'`)
+3. **JSON Parsing Errors**: Malformed JSON returns a clean 400 error without internal details
+4. **CORS Errors**: Returns a standardized 403 error for disallowed origins
+
+```javascript
+// Production error response (no stack traces)
+{
+  "error": "Internal server error",
+  "message": "An unexpected error occurred"
+}
+
+// Development error response (includes stack for debugging)
+{
+  "error": "Specific error message",
+  "message": "Detailed error info",
+  "stack": "Error: ...\n    at ..."
+}
+```
+
+### Input Validation
+
+- Empty project names return a proper 400 error: `{ "error": "Project name cannot be empty" }`
+- Invalid step status values are rejected with a descriptive error message
+- All API endpoints validate required fields before processing
+
+### CORS Configuration
+
+The server uses dynamic CORS origin checking:
+
+```javascript
+// Exact matches (from config)
+corsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173']
+
+// Pattern matches (for tunnels and dynamic URLs)
+corsOriginPatterns: ['.trycloudflare.com', '.ngrok.io', '.loca.lt']
+```
+
+In development mode, `corsAllowAllInDev: true` allows all origins. Set `NODE_ENV=production` to enforce strict origin checking.
 
 ## Documentation
 
@@ -528,3 +776,27 @@ If the dashboard shows "Disconnected":
 ## License
 
 MIT
+
+## Changelog
+
+### v1.0.1 (2026-03-28)
+
+#### Tunnel Support
+- Added `allowedHosts: ['.trycloudflare.com']` to Vite config for frontend tunnel compatibility
+- Implemented CORS origin pattern matching for dynamic tunnel URLs (`.trycloudflare.com`, `.ngrok.io`, `.ngrok-free.app`, `.loca.lt`)
+- Enabled Socket.IO polling fallback for reliable WebSocket connections through tunnels
+- Extended ping timeout (60s) for slow tunnel connections
+
+#### Security Improvements
+- Added global error handler to prevent stack trace exposure in production
+- Implemented input validation for empty project names (returns proper 400 error)
+- Added CORS error handling with standardized 403 responses
+- JSON parsing errors return clean 400 responses without internal details
+
+#### API Enhancements
+- Added PUT method alias for `/api/projects/:name/steps/:stepNumber/status` endpoint
+- All API endpoints now have consistent error response format
+
+#### Testing
+- Client agent validation completed - all critical issues identified and fixed
+- Application approved for production use via tunnel access
