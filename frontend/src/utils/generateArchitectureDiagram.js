@@ -131,6 +131,7 @@ export function generateArchitectureDiagram(decisionTree = [], techStack = []) {
   // Build subgraphs for each layer
   const subgraphs = [];
   const connections = [];
+  const styles = [];  // Styles must come at the END in mermaid
   
   usedLayers.forEach(layer => {
     const config = LAYER_CONFIG[layer];
@@ -148,10 +149,10 @@ export function generateArchitectureDiagram(decisionTree = [], techStack = []) {
 ${nodes}
   end`);
     
-    // Add styling for this layer
+    // Collect styling for this layer (will be added at the end)
     decisions.forEach((d, i) => {
       const nodeId = generateNodeId(d, i);
-      subgraphs.push(`  style ${nodeId} fill:${config.color}33,stroke:${config.color},stroke-width:2px`);
+      styles.push(`  style ${nodeId} fill:${config.color}33,stroke:${config.color},stroke-width:2px`);
     });
   });
   
@@ -160,8 +161,8 @@ ${nodes}
     const techLabel = techStack.slice(0, 6).join('\\n');
     subgraphs.push(`  subgraph tech ["Tech Stack"]
     techstack["${techLabel}"]
-  end
-  style techstack fill:#6366f133,stroke:#6366f1,stroke-width:2px`);
+  end`);
+    styles.push(`  style techstack fill:#6366f133,stroke:#6366f1,stroke-width:2px`);
   }
   
   // Generate connections between layers (top to bottom flow)
@@ -189,10 +190,11 @@ ${nodes}
     }
   }
   
-  // Assemble the diagram
+  // Assemble the diagram with styles at the END (mermaid requirement)
   const diagram = `graph TB
 ${subgraphs.join('\n')}
-${connections.join('\n')}`;
+${connections.join('\n')}
+${styles.join('\n')}`;
   
   return diagram;
 }

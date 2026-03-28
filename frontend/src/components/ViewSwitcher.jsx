@@ -31,7 +31,7 @@ function ViewSwitcher({ activeView, onViewChange }) {
             
             {/* Tooltip on hover */}
             <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 pointer-events-none group-hover:opacity-100 whitespace-nowrap z-50">
-              {view.label}
+              {view.tooltip}
             </span>
           </button>
         );

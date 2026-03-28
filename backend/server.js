@@ -32,6 +32,7 @@ const { getConfig } = require('./lib/config');
 const { getPaths, ensureDirectories, isOpenClawEnvironment } = require('./lib/paths');
 const db = require('./lib/database');
 const { GitSync, ProjectFileSync } = require('./lib/sync');
+const { updateProjectState, updateStepStatus } = require('./lib/projectState');
 
 // Initialize configuration
 const config = getConfig();
@@ -324,6 +325,83 @@ app.get('/api/projects/:name', async (req, res) => {
   } catch (error) {
     console.error('[API] Error fetching project:', error);
     res.status(500).json({ error: 'Failed to fetch project' });
+  }
+});
+
+/**
+ * PATCH /api/projects/:name/steps/:stepNumber/status
+ * Update step status via REST API
+ */
+app.patch('/api/projects/:name/steps/:stepNumber/status', async (req, res) => {
+  const { name, stepNumber } = req.params;
+  const { status } = req.body;
+  
+  // Validate status
+  const validStatuses = ['pending', 'in_progress', 'done'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({
+      error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+    });
+  }
+  
+  try {
+    // Get project
+    const project = await db.getProject(name);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    // Find step in implementation plan
+    const stepExists = project.implementation_plan?.some(
+      s => String(s.step) === String(stepNumber)
+    );
+    
+    if (!stepExists) {
+      return res.status(404).json({ error: `Step ${stepNumber} not found` });
+    }
+    
+    // Get previous status for response
+    const previousStatus = project.implementation_plan.find(
+      s => String(s.step) === String(stepNumber)
+    )?.status;
+    
+    // Update step status
+    const updatedPlan = project.implementation_plan.map(step =>
+      String(step.step) === String(stepNumber)
+        ? { ...step, status }
+        : step
+    );
+    
+    // Update project
+    const projectPath = project.path || path.join(paths.projectsDir, name);
+    
+    // Update file if path exists
+    try {
+      await updateProjectState(projectPath, { implementation_plan: updatedPlan });
+    } catch (fileError) {
+      console.warn('[API] Could not update project file:', fileError.message);
+      // Continue with database update only
+    }
+    
+    // Update database
+    const updatedProject = { ...project, implementation_plan: updatedPlan };
+    await db.upsertProject(updatedProject, projectPath);
+    
+    // Broadcast via WebSocket
+    io.emit('project_updated', updatedProject);
+    
+    console.log(`[API] Step ${stepNumber} status updated to ${status} in ${name}`);
+    
+    // Return success
+    res.json({
+      success: true,
+      step: { step: stepNumber, status, previousStatus },
+      project: updatedProject
+    });
+    
+  } catch (error) {
+    console.error('[API] Error updating step status:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -757,6 +835,55 @@ io.on('connection', async (socket) => {
   } catch (error) {
     console.error('[Socket] Error sending initial state:', error);
   }
+  
+  // Handle step status update via WebSocket
+  socket.on('step_status_update', async (data) => {
+    const { projectName, stepId, newStatus, previousStatus } = data;
+    
+    console.log(`[Socket] Step status update: ${projectName} step ${stepId} -> ${newStatus}`);
+    
+    try {
+      // Get project from database
+      const project = await db.getProject(projectName);
+      
+      if (!project) {
+        return socket.emit('step_status_error', {
+          projectName,
+          stepId,
+          error: 'Project not found',
+          previousStatus
+        });
+      }
+      
+      // Use project path if available, otherwise construct it
+      const projectPath = project.path || path.join(paths.projectsDir, projectName);
+      
+      // Update step status in file
+      const result = await updateStepStatus(projectPath, stepId, newStatus);
+      
+      // Update database
+      const updatedProject = {
+        ...project,
+        implementation_plan: result.updatedPlan
+      };
+      await db.upsertProject(updatedProject, projectPath);
+      
+      // Broadcast to ALL clients (including sender)
+      io.emit('project_updated', updatedProject);
+      
+      console.log(`[Socket] Step ${stepId} updated to ${newStatus} in ${projectName}`);
+      
+    } catch (error) {
+      console.error('[Socket] Step status update error:', error);
+      
+      socket.emit('step_status_error', {
+        projectName,
+        stepId,
+        error: error.message,
+        previousStatus
+      });
+    }
+  });
   
   socket.on('disconnect', () => {
     console.log(`[Socket] Client disconnected: ${socket.id}`);

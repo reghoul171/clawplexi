@@ -1,32 +1,41 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import mermaid from 'mermaid';
 import { Layers, AlertCircle } from 'lucide-react';
 import { generateArchitectureDiagram } from '../../utils/generateArchitectureDiagram';
 
-// Initialize mermaid once
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'dark',
-  themeVariables: {
-    primaryColor: '#3b82f6',
-    primaryTextColor: '#fff',
-    primaryBorderColor: '#1e40af',
-    lineColor: '#6b7280',
-    secondaryColor: '#1f2937',
-    tertiaryColor: '#374151',
-    subGraphBg: '#1f2937',
-    subGraphBorderColor: '#374151'
-  },
-  flowchart: {
-    curve: 'basis',
-    padding: 15,
-    nodeSpacing: 30,
-    rankSpacing: 50,
-    useMaxWidth: true
-  }
-});
-
+// Track if mermaid has been initialized
+let mermaidInitialized = false;
 let diagramId = 0;
+
+/**
+ * Initialize mermaid once (lazy initialization)
+ */
+function initMermaid() {
+  if (!mermaidInitialized) {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#3b82f6',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#1e40af',
+        lineColor: '#6b7280',
+        secondaryColor: '#1f2937',
+        tertiaryColor: '#374151',
+        subGraphBg: '#1f2937',
+        subGraphBorderColor: '#374151'
+      },
+      flowchart: {
+        curve: 'basis',
+        padding: 15,
+        nodeSpacing: 30,
+        rankSpacing: 50,
+        useMaxWidth: true
+      }
+    });
+    mermaidInitialized = true;
+  }
+}
 
 /**
  * System Architecture Diagram component.
@@ -52,22 +61,40 @@ function SystemArchitectureDiagram({ decisionTree = [], techStack = [] }) {
       return;
     }
     
+    let isMounted = true;
+    
     const renderDiagram = async () => {
+      // Initialize mermaid lazily
+      initMermaid();
+      
       const id = `system-arch-diagram-${++diagramId}`;
       
       try {
+        // Validate syntax first (recommended for mermaid 11+)
+        await mermaid.parse(diagramDefinition);
+        
+        // Render the diagram
         const { svg } = await mermaid.render(id, diagramDefinition);
-        setSvgContent(svg);
-        setError(null);
+        
+        if (isMounted) {
+          setSvgContent(svg);
+          setError(null);
+        }
       } catch (err) {
         console.error('Mermaid render error:', err);
-        setError(err.message || 'Failed to render diagram');
-        setSvgContent('');
+        if (isMounted) {
+          setError(err.message || 'Failed to render diagram');
+          setSvgContent('');
+        }
       }
     };
     
     renderDiagram();
-  }, [diagramDefinition]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [diagramDefinition, hasData]);
   
   // No data fallback
   if (!hasData) {
