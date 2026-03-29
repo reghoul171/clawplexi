@@ -73,7 +73,7 @@ export function useStepEditor(project, onUpdate) {
       // Fallback to REST API
       try {
         const response = await fetch(
-          `${API_URL}/api/projects/${encodeURIComponent(project.project_name)}/steps/${editingStep}`,
+          `${API_URL}/api/projects/${encodeURIComponent(project.project_name)}/steps/${editingStep}/status`,
           {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
