@@ -135,6 +135,68 @@ export function useStepDrag(project) {
   }, [project, optimisticSteps]);
 
   /**
+   * Handle quick status change (from dropdown, not drag)
+   * @param {Object} step - The step object to update
+   * @param {string} newStatus - The new status value
+   */
+  const handleStatusChange = useCallback((step, newStatus) => {
+    const stepId = step.step;
+    const previousStatus = step.status;
+    
+    // Skip if status unchanged
+    if (previousStatus === newStatus) {
+      console.log('[useStepDrag] Status unchanged, skipping');
+      return;
+    }
+    
+    console.log('[useStepDrag] Quick status change for step', stepId, 'from', previousStatus, 'to', newStatus);
+    
+    // 1. Optimistic update
+    const currentSteps = optimisticSteps ?? project?.implementation_plan ?? [];
+    const updatedSteps = currentSteps.map(s =>
+      String(s.step) === String(stepId)
+        ? { ...s, status: newStatus }
+        : s
+    );
+    
+    setOptimisticSteps(updatedSteps);
+    setIsUpdating(true);
+    isUpdatingRef.current = true;
+    setError(null);
+    pendingUpdateRef.current = { stepId, newStatus };
+    
+    // 2. REST API call
+    fetch(`${API_URL}/api/projects/${encodeURIComponent(project.project_name)}/steps/${stepId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(data => {
+            throw new Error(data.error || `HTTP ${res.status}`);
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('[useStepDrag] Quick status update successful');
+        setOptimisticSteps(null);
+        setIsUpdating(false);
+        isUpdatingRef.current = false;
+        pendingUpdateRef.current = null;
+      })
+      .catch(err => {
+        console.error('[useStepDrag] Quick status update failed:', err);
+        setError(err.message);
+        setOptimisticSteps(null);
+        setIsUpdating(false);
+        isUpdatingRef.current = false;
+        pendingUpdateRef.current = null;
+      });
+  }, [project, optimisticSteps]);
+
+  /**
    * Clear error
    */
   const clearError = useCallback(() => {
@@ -150,6 +212,8 @@ export function useStepDrag(project) {
     error,
     // Drag handler
     handleDragEnd,
+    // Quick status change handler
+    handleStatusChange,
     // Error handler
     clearError
   };

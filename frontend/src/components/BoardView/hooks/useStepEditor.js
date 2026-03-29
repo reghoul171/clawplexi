@@ -10,7 +10,7 @@ import { API_URL } from '../../../config/api';
  */
 export function useStepEditor(project, onUpdate) {
   const [editingStep, setEditingStep] = useState(null);
-  const [editForm, setEditForm] = useState({ task: '', status: '' });
+  const [editForm, setEditForm] = useState({ task: '', status: '', notes: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   
@@ -42,13 +42,17 @@ export function useStepEditor(project, onUpdate) {
 
   const startEdit = useCallback((step) => {
     setEditingStep(step.step);
-    setEditForm({ task: step.task, status: step.status || 'pending' });
+    setEditForm({ 
+      task: step.task, 
+      status: step.status || 'pending',
+      notes: step.notes || ''
+    });
     setError(null);
   }, []);
 
   const cancelEdit = useCallback(() => {
     setEditingStep(null);
-    setEditForm({ task: '', status: '' });
+    setEditForm({ task: '', status: '', notes: '' });
     setError(null);
   }, []);
 

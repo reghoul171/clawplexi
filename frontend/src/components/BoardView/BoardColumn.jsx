@@ -16,7 +16,8 @@ function BoardColumn({
   activeId,
   totalSteps,
   onEdit,
-  onDelete
+  onDelete,
+  onStatusChange
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
@@ -57,6 +58,7 @@ function BoardColumn({
             stepIndex={step.step - 1}
             onEdit={onEdit}
             onDelete={onDelete}
+            onStatusChange={onStatusChange}
           />
         ))}
         

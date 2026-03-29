@@ -21,7 +21,7 @@ import { TaskCardEditor } from './TaskCardEditor';
 function BoardView({ project }) {
   const [activeId, setActiveId] = useState(null);
   
-  const { steps, handleDragEnd, isUpdating, error, clearError } = useStepDrag(project);
+  const { steps, handleDragEnd, handleStatusChange, isUpdating, error, clearError } = useStepDrag(project);
   
   // Step editor hook
   const {
@@ -149,6 +149,7 @@ function BoardView({ project }) {
             totalSteps={steps.length}
             onEdit={startEdit}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
           />
           
           {/* In Progress Column */}
@@ -164,6 +165,7 @@ function BoardView({ project }) {
             totalSteps={steps.length}
             onEdit={startEdit}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
           />
           
           {/* Done Column */}
@@ -179,6 +181,7 @@ function BoardView({ project }) {
             totalSteps={steps.length}
             onEdit={startEdit}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
           />
         </div>
 
