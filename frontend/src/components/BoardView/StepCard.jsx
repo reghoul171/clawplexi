@@ -30,6 +30,7 @@ function StepCard({ step, isDragging, totalSteps, stepIndex, onEdit, onDelete })
     <div
       ref={setNodeRef}
       style={style}
+      data-testid={`step-card-${step.step}`}
       className={`
         group relative p-3 bg-gray-700/50 rounded-lg border border-gray-600/50
         hover:border-gray-500 transition-all duration-200

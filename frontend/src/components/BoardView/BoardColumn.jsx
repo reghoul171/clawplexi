@@ -28,6 +28,7 @@ function BoardColumn({
   return (
     <div
       ref={setNodeRef}
+      data-testid={`column-${id}`}
       className={`
         flex-1 min-w-[280px] bg-gray-800/50 rounded-xl border overflow-hidden
         transition-all duration-150

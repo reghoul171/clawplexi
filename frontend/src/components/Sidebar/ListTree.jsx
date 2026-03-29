@@ -28,9 +28,13 @@ function ListTree({ list, isActive, onClick }) {
     ? Math.round((list.completedCount / list.itemCount) * 100) 
     : 0;
   
+  // Derive test id from list id (e.g., "tests-MyProject" -> "sidebar-tests")
+  const testId = list.id ? `sidebar-${list.id.split('-')[0]}` : 'sidebar-item';
+  
   return (
     <button
       onClick={onClick}
+      data-testid={testId}
       className={`w-full flex items-center gap-2 pl-9 pr-3 py-2 text-sm transition-all duration-150 ${
         isActive
           ? 'bg-purple-600 text-white'

@@ -98,7 +98,7 @@ function BoardView({ project }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="board-view">
       {/* Header */}
       <div className="bg-gradient-to-r from-violet-900/30 to-blue-900/30 rounded-xl p-6 border border-violet-500/30">
         <div className="flex items-center gap-4">

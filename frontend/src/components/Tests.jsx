@@ -164,7 +164,7 @@ function Tests({ project }) {
   const totalTests = project.tests_generated.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="tests-view">
       {/* Action Buttons */}
       <div className="bg-gray-800 rounded-xl p-4">
         <div className="flex flex-wrap gap-3">

@@ -4,7 +4,7 @@ import SpaceSection from './SpaceSection';
 import SidebarFooter from './SidebarFooter';
 import { transformToWorkspace } from '../../utils/transformProjects';
 
-function Sidebar({ projects, activeProject, onSelectProject, connected }) {
+function Sidebar({ projects, activeProject, onSelectProject, connected, onViewChange }) {
   // State for workspace collapse
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
   
@@ -30,10 +30,20 @@ function Sidebar({ projects, activeProject, onSelectProject, connected }) {
     });
   };
   
-  // Handle list selection
+  // Handle list selection - switches both project and view
   const handleSelectList = (list) => {
     if (list.project) {
       onSelectProject(list.project);
+    }
+    // Switch view based on list ID prefix
+    if (onViewChange && list.id) {
+      if (list.id.startsWith('tests-')) {
+        onViewChange('tests');
+      } else if (list.id.startsWith('impl-')) {
+        onViewChange('board');
+      } else if (list.id.startsWith('decisions-')) {
+        onViewChange('list');
+      }
     }
   };
   

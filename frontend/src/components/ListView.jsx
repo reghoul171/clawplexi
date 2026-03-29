@@ -23,7 +23,7 @@ function ListView({ project }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="list-view">
       {/* Overview Section - Default expanded */}
       <CollapsibleSection
         id="list-overview"

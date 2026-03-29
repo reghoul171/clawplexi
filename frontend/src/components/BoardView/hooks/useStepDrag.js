@@ -4,8 +4,9 @@ import { API_URL } from '../../../config/api';
 
 /**
  * Custom hook for handling step drag operations with optimistic updates
- * @param {Object} project - Current project data
- * @returns {Object} - Drag handlers and state
+ * 
+ * Design: REST API is the PRIMARY transport for updates (more reliable through tunnels/proxies).
+ * Socket.io is used ONLY for receiving real-time updates from the server.
  */
 export function useStepDrag(project) {
   const [optimisticSteps, setOptimisticSteps] = useState(null);
@@ -13,39 +14,31 @@ export function useStepDrag(project) {
   const [error, setError] = useState(null);
   
   const socketRef = useRef(null);
-  const timeoutRef = useRef(null);
   const pendingUpdateRef = useRef(null);
   const isUpdatingRef = useRef(false);
 
-  // Initialize socket connection
+  // Initialize socket connection for receiving updates ONLY
   useEffect(() => {
-    socketRef.current = io(API_URL);
+    socketRef.current = io(API_URL, {
+      transports: ['websocket', 'polling'],
+    });
     
     // Listen for errors
     socketRef.current.on('step_status_error', (data) => {
-      console.error('[useStepDrag] Update failed:', data.error);
-      setError(data.error);
-      setOptimisticSteps(null); // Rollback
-      setIsUpdating(false);
-      isUpdatingRef.current = false;
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      console.error('[useStepDrag] Server reported update error:', data.error);
+      // Don't rollback here - REST API call already handles success/failure
     });
     
-    // Listen for project updates (confirmation)
+    // Listen for project updates from server (broadcast to all clients)
     socketRef.current.on('project_updated', (updatedProject) => {
-      if (updatedProject.project_name === project?.project_name && pendingUpdateRef.current) {
-        console.log('[useStepDrag] Server confirmed update');
-        // Server confirmed - clear optimistic state
-        setOptimisticSteps(null);
-        setIsUpdating(false);
-        isUpdatingRef.current = false;
-        pendingUpdateRef.current = null;
-        
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
+      if (updatedProject.project_name === project?.project_name) {
+        console.log('[useStepDrag] Received project update from server');
+        // Clear optimistic state since server confirmed
+        if (pendingUpdateRef.current) {
+          setOptimisticSteps(null);
+          setIsUpdating(false);
+          isUpdatingRef.current = false;
+          pendingUpdateRef.current = null;
         }
       }
     });
@@ -54,14 +47,11 @@ export function useStepDrag(project) {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
     };
   }, [project?.project_name]);
 
   /**
-   * Handle drag end event
+   * Handle drag end event - ALWAYS uses REST API for reliability
    * @param {Object} event - dnd-kit drag end event
    */
   const handleDragEnd = useCallback((event) => {
@@ -110,54 +100,39 @@ export function useStepDrag(project) {
     setError(null);
     pendingUpdateRef.current = { stepId, newStatus };
     
-    // 2. Emit to server via WebSocket
-    if (socketRef.current && socketRef.current.connected) {
-      console.log('[useStepDrag] Emitting step_status_update via socket');
-      socketRef.current.emit('step_status_update', {
-        projectName: project.project_name,
-        stepId,
-        newStatus,
-        previousStatus
-      });
-    } else {
-      // Fallback to REST API if socket not connected
-      console.log('[useStepDrag] Socket not connected, using REST fallback');
-      fetch(`${API_URL}/api/projects/${encodeURIComponent(project.project_name)}/steps/${stepId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+    // 2. ALWAYS use REST API as primary transport (reliable through tunnels)
+    console.log('[useStepDrag] Sending update via REST API');
+    fetch(`${API_URL}/api/projects/${encodeURIComponent(project.project_name)}/steps/${stepId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(data => {
+            throw new Error(data.error || `HTTP ${res.status}`);
+          });
+        }
+        return res.json();
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) {
-            throw new Error(data.error);
-          }
-          console.log('[useStepDrag] REST update successful');
-          setOptimisticSteps(null);
-          setIsUpdating(false);
-        })
-        .catch(err => {
-          console.error('[useStepDrag] REST update failed:', err);
-          setError(err.message);
-          setOptimisticSteps(null); // Rollback
-          setIsUpdating(false);
-        });
-      return;
-    }
-    
-    // 3. Set timeout for rollback if no response
-    timeoutRef.current = setTimeout(() => {
-      if (isUpdatingRef.current && pendingUpdateRef.current) {
-        console.warn('[useStepDrag] Timeout - rolling back');
+      .then(data => {
+        console.log('[useStepDrag] REST update successful');
+        // Server will broadcast update via socket, but we can clear optimistic state now
         setOptimisticSteps(null);
-        setError('Update timed out');
         setIsUpdating(false);
         isUpdatingRef.current = false;
         pendingUpdateRef.current = null;
-      }
-    }, 5000);
+      })
+      .catch(err => {
+        console.error('[useStepDrag] REST update failed:', err);
+        setError(err.message);
+        setOptimisticSteps(null); // Rollback on failure
+        setIsUpdating(false);
+        isUpdatingRef.current = false;
+        pendingUpdateRef.current = null;
+      });
     
-  }, [project, optimisticSteps, isUpdating]);
+  }, [project, optimisticSteps]);
 
   /**
    * Clear error
