@@ -2,7 +2,7 @@
 
 /**
  * PM Dashboard CLI
- * 
+ *
  * Command-line interface for managing the PM Dashboard.
  * Handles configuration, export/import, and server management.
  */
@@ -16,8 +16,21 @@ const command = args[0] || 'help';
 
 // Load lib modules
 const libDir = path.join(__dirname, '..', 'lib');
-const { getConfig, saveConfig, validateConfig, getNestedValue, setNestedValue, DEFAULT_CONFIG } = require(path.join(libDir, 'config'));
-const { getPaths, ensureDirectories, resolvePath, isOpenClawEnvironment, getOpenClawHome } = require(path.join(libDir, 'paths'));
+const {
+  getConfig,
+  saveConfig,
+  validateConfig,
+  getNestedValue,
+  setNestedValue,
+  DEFAULT_CONFIG,
+} = require(path.join(libDir, 'config'));
+const {
+  getPaths,
+  ensureDirectories,
+  resolvePath,
+  isOpenClawEnvironment,
+  getOpenClawHome,
+} = require(path.join(libDir, 'paths'));
 
 /**
  * Print usage information
@@ -91,7 +104,7 @@ Environment Variables:
  */
 function startServer(options) {
   const config = getConfig();
-  
+
   // Apply CLI overrides
   if (options.port) {
     config.server.port = parseInt(options.port, 10);
@@ -102,34 +115,34 @@ function startServer(options) {
   if (options.noSync) {
     config.sync.enabled = false;
   }
-  
+
   // Ensure directories exist
   const paths = getPaths(config);
   ensureDirectories(paths);
-  
+
   console.log('[PM Dashboard] Starting server...');
   console.log(`[PM Dashboard] Config: ${config._configFile}`);
   console.log(`[PM Dashboard] Port: ${config.server.port}`);
   console.log(`[PM Dashboard] Projects: ${paths.projectsDir}`);
-  
+
   if (options.detach) {
     // Fork the server process
     const { spawn } = require('child_process');
     const serverPath = path.join(__dirname, '..', 'server.js');
-    
+
     const child = spawn(process.execPath, [serverPath], {
       detached: true,
       stdio: 'ignore',
       env: {
         ...process.env,
         PM_DASHBOARD_PORT: config.server.port.toString(),
-        PM_DASHBOARD_HOST: config.server.host
-      }
+        PM_DASHBOARD_HOST: config.server.host,
+      },
     });
-    
+
     child.unref();
     console.log(`[PM Dashboard] Server started in background (PID: ${child.pid})`);
-    
+
     // Save PID for later
     const pidFile = path.join(paths.logsDir, 'server.pid');
     fs.writeFileSync(pidFile, child.pid.toString());
@@ -146,14 +159,14 @@ function startServer(options) {
 function stopServer() {
   const paths = getPaths();
   const pidFile = path.join(paths.logsDir, 'server.pid');
-  
+
   if (!fs.existsSync(pidFile)) {
     console.log('[PM Dashboard] No PID file found. Server may not be running.');
     return;
   }
-  
+
   const pid = parseInt(fs.readFileSync(pidFile, 'utf8'), 10);
-  
+
   try {
     process.kill(pid, 'SIGTERM');
     fs.unlinkSync(pidFile);
@@ -174,19 +187,19 @@ function stopServer() {
 function showStatus() {
   const config = getConfig();
   const paths = getPaths(config);
-  
+
   console.log('\n=== PM Dashboard Status ===\n');
-  
+
   // Configuration
   console.log('Configuration:');
   console.log(`  Config file: ${config._configFile}`);
   console.log(`  Loaded at: ${config._loadedAt}`);
-  
+
   // Server
   console.log('\nServer:');
   console.log(`  Host: ${config.server.host}`);
   console.log(`  Port: ${config.server.port}`);
-  
+
   // Check if server is running
   const pidFile = path.join(paths.logsDir, 'server.pid');
   if (fs.existsSync(pidFile)) {
@@ -200,30 +213,30 @@ function showStatus() {
   } else {
     console.log('  Status: Not running');
   }
-  
+
   // Paths
   console.log('\nPaths:');
   console.log(`  Projects: ${paths.projectsDir}`);
   console.log(`  Database: ${paths.stateFile}`);
   console.log(`  Logs: ${paths.logsDir}`);
-  
+
   // Check paths exist
   console.log(`  Projects dir exists: ${fs.existsSync(paths.projectsDir)}`);
   console.log(`  Database exists: ${fs.existsSync(paths.stateFile)}`);
-  
+
   // Sync
   console.log('\nSync:');
   console.log(`  Enabled: ${config.sync.enabled}`);
   console.log(`  Method: ${config.sync.method}`);
   console.log(`  Interval: ${config.sync.intervalMs}ms`);
-  
+
   // OpenClaw environment
   console.log('\nOpenClaw:');
   console.log(`  Detected: ${isOpenClawEnvironment()}`);
   if (isOpenClawEnvironment()) {
     console.log(`  Home: ${getOpenClawHome()}`);
   }
-  
+
   // Validation
   const validation = validateConfig(config);
   console.log('\nValidation:');
@@ -233,7 +246,7 @@ function showStatus() {
     console.log('  Status: Invalid');
     validation.errors.forEach(err => console.log(`  Error: ${err}`));
   }
-  
+
   console.log('');
 }
 
@@ -242,7 +255,7 @@ function showStatus() {
  */
 function handleConfig(action, ...params) {
   const config = getConfig();
-  
+
   switch (action) {
     case 'get': {
       const key = params[0];
@@ -252,7 +265,7 @@ function handleConfig(action, ...params) {
         console.log('Example: pm-dashboard config get server.port');
         process.exit(1);
       }
-      
+
       const value = getNestedValue(config, key);
       if (value === undefined) {
         console.log(`Key '${key}' not found`);
@@ -263,30 +276,30 @@ function handleConfig(action, ...params) {
       }
       break;
     }
-    
+
     case 'set': {
       const key = params[0];
       const value = params[1];
-      
+
       if (!key || value === undefined) {
         console.error('Error: Key and value are required');
         console.log('Usage: pm-dashboard config set <key> <value>');
         console.log('Example: pm-dashboard config set server.port 8080');
         process.exit(1);
       }
-      
+
       // Parse value
       let parsedValue = value;
       if (value === 'true') parsedValue = true;
       else if (value === 'false') parsedValue = false;
       else if (!isNaN(value) && value !== '') parsedValue = Number(value);
-      
+
       setNestedValue(config, key, parsedValue);
       saveConfig(config);
       console.log(`Set ${key} = ${parsedValue}`);
       break;
     }
-    
+
     case 'list': {
       const displayConfig = { ...config };
       delete displayConfig._configFile;
@@ -294,12 +307,12 @@ function handleConfig(action, ...params) {
       console.log(JSON.stringify(displayConfig, null, 2));
       break;
     }
-    
+
     case 'path': {
       console.log(config._configFile);
       break;
     }
-    
+
     case 'reset': {
       const configPath = config._configFile;
       if (fs.existsSync(configPath)) {
@@ -309,7 +322,7 @@ function handleConfig(action, ...params) {
       console.log('Configuration reset to defaults');
       break;
     }
-    
+
     default:
       console.error(`Unknown config action: ${action}`);
       console.log('Valid actions: get, set, list, path, reset');
@@ -324,20 +337,20 @@ function exportState(options) {
   const config = getConfig();
   const paths = getPaths(config);
   const outputFile = options.output || 'pm-dashboard-export.json';
-  
+
   console.log('[PM Dashboard] Exporting state...');
-  
+
   // Load database module dynamically to avoid initialization issues
   const db = require(path.join(libDir, 'database'));
-  
+
   db.initDatabase(paths.stateFile).then(async () => {
     try {
       const data = await db.exportToJson();
-      
+
       // Write to file
       fs.writeFileSync(outputFile, JSON.stringify(data, null, 2));
       console.log(`[PM Dashboard] Exported ${data.projects.length} projects to ${outputFile}`);
-      
+
       await db.closeDatabase();
     } catch (error) {
       console.error('[PM Dashboard] Export failed:', error.message);
@@ -355,23 +368,23 @@ function importState(inputFile, options) {
     console.log('Usage: pm-dashboard import <file> [--merge]');
     process.exit(1);
   }
-  
+
   const resolvedPath = resolvePath(inputFile);
-  
+
   if (!fs.existsSync(resolvedPath)) {
     console.error(`Error: File not found: ${resolvedPath}`);
     process.exit(1);
   }
-  
+
   console.log(`[PM Dashboard] Importing from ${resolvedPath}...`);
-  
+
   const config = getConfig();
   const paths = getPaths(config);
   const db = require(path.join(libDir, 'database'));
-  
+
   // Read import file
   const data = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
-  
+
   if (options.validate) {
     console.log('[PM Dashboard] Validating import file...');
     console.log(`  Version: ${data.version}`);
@@ -380,7 +393,7 @@ function importState(inputFile, options) {
     console.log('[PM Dashboard] Validation complete');
     return;
   }
-  
+
   db.initDatabase(paths.stateFile).then(async () => {
     try {
       await db.importFromJson(data, options.merge);
@@ -400,24 +413,24 @@ function initDashboard(options) {
   const silent = options.silent;
   const log = silent ? () => {} : console.log.bind(console);
   const warn = silent ? () => {} : console.warn.bind(console);
-  
+
   const config = getConfig();
   const paths = getPaths(config);
-  
+
   log('[PM Dashboard] Initializing...');
-  
+
   // Ensure directories
   ensureDirectories(paths);
   log('[PM Dashboard] Created directories');
-  
+
   // Initialize Git sync if remote provided
   if (options.remote) {
     const { GitSync } = require(path.join(libDir, 'sync'));
     const gitSync = new GitSync({
       stateDir: path.dirname(paths.stateFile),
-      config: config.sync
+      config: config.sync,
     });
-    
+
     const result = gitSync.clone(options.remote);
     if (result.success) {
       log(`[PM Dashboard] Cloned state from ${options.remote}`);
@@ -426,13 +439,13 @@ function initDashboard(options) {
       log('[PM Dashboard] Continuing without Git sync...');
     }
   }
-  
+
   // Create initial config if needed
   if (!fs.existsSync(config._configFile)) {
     saveConfig(config);
     log(`[PM Dashboard] Created config: ${config._configFile}`);
   }
-  
+
   if (!silent) {
     console.log('\n[PM Dashboard] Initialization complete!');
     console.log('\nNext steps:');
@@ -451,26 +464,26 @@ function handleMigrate(action, ...params) {
     case 'check': {
       const config = getConfig();
       const paths = getPaths(config);
-      
+
       console.log('[PM Dashboard] Migration Check\n');
-      
+
       // Check what needs to be migrated
       const checks = [
         { name: 'OpenClaw environment', pass: isOpenClawEnvironment() },
         { name: 'Config directory', pass: fs.existsSync(path.dirname(paths.configFile)) },
         { name: 'Projects directory', pass: fs.existsSync(paths.projectsDir) },
-        { name: 'Database file', pass: fs.existsSync(paths.stateFile) }
+        { name: 'Database file', pass: fs.existsSync(paths.stateFile) },
       ];
-      
+
       for (const check of checks) {
         console.log(`  ${check.pass ? '✓' : '✗'} ${check.name}`);
       }
-      
+
       const allPassed = checks.every(c => c.pass);
       console.log(`\nStatus: ${allPassed ? 'Ready for migration' : 'Migration required'}`);
       break;
     }
-    
+
     case 'clone': {
       const url = params[0];
       if (!url) {
@@ -478,11 +491,11 @@ function handleMigrate(action, ...params) {
         console.log('Usage: pm-dashboard migrate clone <git-url>');
         process.exit(1);
       }
-      
+
       initDashboard({ remote: url });
       break;
     }
-    
+
     default:
       console.error(`Unknown migrate action: ${action}`);
       console.log('Valid actions: check, export, clone');
@@ -493,14 +506,14 @@ function handleMigrate(action, ...params) {
 // Parse options from args
 function parseOptions(args) {
   const options = {};
-  
+
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     if (arg.startsWith('--')) {
       const key = arg.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
       const nextArg = args[i + 1];
-      
+
       if (nextArg && !nextArg.startsWith('-')) {
         options[key] = nextArg;
         i++;
@@ -510,11 +523,11 @@ function parseOptions(args) {
     } else if (arg.startsWith('-') && arg.length === 2) {
       const key = arg.slice(1);
       const nextArg = args[i + 1];
-      
+
       // Handle short options
       const shortMap = { o: 'output', d: 'detach' };
       const mappedKey = shortMap[key] || key;
-      
+
       if (nextArg && !nextArg.startsWith('-')) {
         options[mappedKey] = nextArg;
         i++;
@@ -523,7 +536,7 @@ function parseOptions(args) {
       }
     }
   }
-  
+
   return options;
 }
 
@@ -534,41 +547,41 @@ switch (command) {
   case 'start':
     startServer(options);
     break;
-  
+
   case 'stop':
     stopServer();
     break;
-  
+
   case 'status':
     showStatus();
     break;
-  
+
   case 'config':
     handleConfig(args[1], ...args.slice(2));
     break;
-  
+
   case 'export':
     exportState(options);
     break;
-  
+
   case 'import':
     importState(args[1], options);
     break;
-  
+
   case 'init':
     initDashboard(options);
     break;
-  
+
   case 'migrate':
     handleMigrate(args[1], ...args.slice(2));
     break;
-  
+
   case 'help':
   case '--help':
   case '-h':
     printHelp();
     break;
-  
+
   default:
     console.error(`Unknown command: ${command}`);
     console.log('Run "pm-dashboard help" for usage information.');

@@ -13,26 +13,26 @@ export function useStepEditor(project, onUpdate) {
   const [editForm, setEditForm] = useState({ task: '', status: '', notes: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const socketRef = useRef(null);
 
   // Initialize socket connection
   useEffect(() => {
     socketRef.current = io(API_URL);
-    
-    socketRef.current.on('step_update_error', (data) => {
+
+    socketRef.current.on('step_update_error', data => {
       console.error('[useStepEditor] Update failed:', data.error);
       setError(data.error);
       setIsSaving(false);
     });
-    
-    socketRef.current.on('step_updated', (data) => {
+
+    socketRef.current.on('step_updated', data => {
       if (data.projectName === project?.project_name) {
         console.log('[useStepEditor] Server confirmed update');
         setIsSaving(false);
       }
     });
-    
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -40,12 +40,12 @@ export function useStepEditor(project, onUpdate) {
     };
   }, [project?.project_name]);
 
-  const startEdit = useCallback((step) => {
+  const startEdit = useCallback(step => {
     setEditingStep(step.step);
-    setEditForm({ 
-      task: step.task, 
+    setEditForm({
+      task: step.task,
       status: step.status || 'pending',
-      notes: step.notes || ''
+      notes: step.notes || '',
     });
     setError(null);
   }, []);
@@ -58,16 +58,16 @@ export function useStepEditor(project, onUpdate) {
 
   const saveEdit = useCallback(async () => {
     if (!editingStep || !project) return;
-    
+
     setIsSaving(true);
     setError(null);
-    
+
     // Emit WebSocket event
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit('step_update', {
         projectName: project.project_name,
         stepId: editingStep,
-        updates: editForm
+        updates: editForm,
       });
     } else {
       // Fallback to REST API
@@ -77,15 +77,15 @@ export function useStepEditor(project, onUpdate) {
           {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(editForm)
+            body: JSON.stringify(editForm),
           }
         );
-        
+
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || 'Failed to update step');
         }
-        
+
         setIsSaving(false);
       } catch (err) {
         console.error('[useStepEditor] REST update failed:', err);
@@ -107,7 +107,7 @@ export function useStepEditor(project, onUpdate) {
     cancelEdit,
     saveEdit,
     isSaving,
-    error
+    error,
   };
 }
 

@@ -9,18 +9,18 @@ const LAYER_CONFIG = {
   data: { name: 'Data', color: '#f59e0b', order: 2 },
   api: { name: 'API', color: '#10b981', order: 3 },
   architecture: { name: 'Architecture', color: '#3b82f6', order: 4 },
-  infrastructure: { name: 'Infrastructure', color: '#8b5cf6', order: 5 }
+  infrastructure: { name: 'Infrastructure', color: '#8b5cf6', order: 5 },
 };
 
 // Map node_id prefixes to layer keys
 const PREFIX_TO_LAYER = {
   auth: 'security',
   security: 'security',
-  sec: 'security',          // Security decisions (SEC-XXX)
+  sec: 'security', // Security decisions (SEC-XXX)
   db: 'data',
   database: 'data',
   data: 'data',
-  tech: 'data',             // Technology decisions (TECH-XXX)
+  tech: 'data', // Technology decisions (TECH-XXX)
   api: 'api',
   endpoint: 'api',
   rest: 'api',
@@ -32,7 +32,7 @@ const PREFIX_TO_LAYER = {
   infrastr: 'infrastructure',
   cloud: 'infrastructure',
   ci: 'infrastructure',
-  cd: 'infrastructure'
+  cd: 'infrastructure',
 };
 
 /**
@@ -44,7 +44,7 @@ export function categorizeDecision(decision) {
   if (!decision || !decision.node_id) {
     return 'architecture'; // Default fallback
   }
-  
+
   const prefix = decision.node_id.split(/[-_]/)[0].toLowerCase();
   return PREFIX_TO_LAYER[prefix] || 'architecture';
 }
@@ -56,11 +56,11 @@ export function categorizeDecision(decision) {
  */
 export function groupDecisionsByLayer(decisions) {
   const groups = {};
-  
+
   if (!Array.isArray(decisions)) {
     return groups;
   }
-  
+
   decisions.forEach(decision => {
     const layer = categorizeDecision(decision);
     if (!groups[layer]) {
@@ -68,7 +68,7 @@ export function groupDecisionsByLayer(decisions) {
     }
     groups[layer].push(decision);
   });
-  
+
   return groups;
 }
 
@@ -80,19 +80,19 @@ export function groupDecisionsByLayer(decisions) {
  */
 function sanitizeForMermaid(text, maxLength = 30) {
   if (!text) return 'Unknown';
-  
+
   // Remove/replace problematic characters
   let sanitized = text
     .replace(/["\[\](){}|<>`]/g, '')
     .replace(/\n/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  
+
   // Truncate if too long
   if (sanitized.length > maxLength) {
     sanitized = sanitized.substring(0, maxLength - 3) + '...';
   }
-  
+
   return sanitized || 'Unknown';
 }
 
@@ -119,43 +119,48 @@ function generateNodeId(decision, index) {
 export function generateArchitectureDiagram(decisionTree = [], techStack = []) {
   const hasDecisions = Array.isArray(decisionTree) && decisionTree.length > 0;
   const hasTechStack = Array.isArray(techStack) && techStack.length > 0;
-  
+
   if (!hasDecisions && !hasTechStack) {
     return '';
   }
-  
+
   const groupedDecisions = groupDecisionsByLayer(decisionTree);
-  const usedLayers = Object.keys(groupedDecisions)
-    .sort((a, b) => (LAYER_CONFIG[a]?.order || 99) - (LAYER_CONFIG[b]?.order || 99));
-  
+  const usedLayers = Object.keys(groupedDecisions).sort(
+    (a, b) => (LAYER_CONFIG[a]?.order || 99) - (LAYER_CONFIG[b]?.order || 99)
+  );
+
   // Build subgraphs for each layer
   const subgraphs = [];
   const connections = [];
-  const styles = [];  // Styles must come at the END in mermaid
-  
+  const styles = []; // Styles must come at the END in mermaid
+
   usedLayers.forEach(layer => {
     const config = LAYER_CONFIG[layer];
     const decisions = groupedDecisions[layer];
-    
+
     if (!config || !decisions || decisions.length === 0) return;
-    
-    const nodes = decisions.map((d, i) => {
-      const nodeId = generateNodeId(d, i);
-      const label = sanitizeForMermaid(d.decision || d.chosen || 'Decision');
-      return `    ${nodeId}["${label}"]`;
-    }).join('\n');
-    
+
+    const nodes = decisions
+      .map((d, i) => {
+        const nodeId = generateNodeId(d, i);
+        const label = sanitizeForMermaid(d.decision || d.chosen || 'Decision');
+        return `    ${nodeId}["${label}"]`;
+      })
+      .join('\n');
+
     subgraphs.push(`  subgraph ${layer} ["${config.name} Layer"]
 ${nodes}
   end`);
-    
+
     // Collect styling for this layer (will be added at the end)
     decisions.forEach((d, i) => {
       const nodeId = generateNodeId(d, i);
-      styles.push(`  style ${nodeId} fill:${config.color}33,stroke:${config.color},stroke-width:2px`);
+      styles.push(
+        `  style ${nodeId} fill:${config.color}33,stroke:${config.color},stroke-width:2px`
+      );
     });
   });
-  
+
   // Add tech stack box if available
   if (hasTechStack) {
     const techLabel = techStack.slice(0, 6).join('\\n');
@@ -164,38 +169,44 @@ ${nodes}
   end`);
     styles.push(`  style techstack fill:#6366f133,stroke:#6366f1,stroke-width:2px`);
   }
-  
+
   // Generate connections between layers (top to bottom flow)
   for (let i = 0; i < usedLayers.length - 1; i++) {
     const currentLayer = usedLayers[i];
     const nextLayer = usedLayers[i + 1];
     const currentDecisions = groupedDecisions[currentLayer] || [];
     const nextDecisions = groupedDecisions[nextLayer] || [];
-    
+
     // Connect last node of current layer to first node of next layer
     if (currentDecisions.length > 0 && nextDecisions.length > 0) {
-      const fromId = generateNodeId(currentDecisions[currentDecisions.length - 1], currentDecisions.length - 1);
+      const fromId = generateNodeId(
+        currentDecisions[currentDecisions.length - 1],
+        currentDecisions.length - 1
+      );
       const toId = generateNodeId(nextDecisions[0], 0);
       connections.push(`  ${fromId} --> ${toId}`);
     }
   }
-  
+
   // Connect last layer to tech stack if available
   if (hasTechStack && usedLayers.length > 0) {
     const lastLayer = usedLayers[usedLayers.length - 1];
     const lastDecisions = groupedDecisions[lastLayer] || [];
     if (lastDecisions.length > 0) {
-      const fromId = generateNodeId(lastDecisions[lastDecisions.length - 1], lastDecisions.length - 1);
+      const fromId = generateNodeId(
+        lastDecisions[lastDecisions.length - 1],
+        lastDecisions.length - 1
+      );
       connections.push(`  ${fromId} -.-> techstack`);
     }
   }
-  
+
   // Assemble the diagram with styles at the END (mermaid requirement)
   const diagram = `graph TB
 ${subgraphs.join('\n')}
 ${connections.join('\n')}
 ${styles.join('\n')}`;
-  
+
   return diagram;
 }
 

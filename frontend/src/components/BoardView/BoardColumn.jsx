@@ -17,13 +17,13 @@ function BoardColumn({
   totalSteps,
   onEdit,
   onDelete,
-  onStatusChange
+  onStatusChange,
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: {
-      status: id
-    }
+      status: id,
+    },
   });
 
   return (
@@ -39,14 +39,9 @@ function BoardColumn({
     >
       {/* Header */}
       <div className={bgColor}>
-        <ColumnHeader
-          title={title}
-          count={steps.length}
-          icon={Icon}
-          iconColor={iconColor}
-        />
+        <ColumnHeader title={title} count={steps.length} icon={Icon} iconColor={iconColor} />
       </div>
-      
+
       {/* Cards container */}
       <div className="p-3 space-y-2 min-h-[200px] max-h-[400px] overflow-auto">
         {steps.map((step, index) => (
@@ -61,7 +56,7 @@ function BoardColumn({
             onStatusChange={onStatusChange}
           />
         ))}
-        
+
         {steps.length === 0 && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-sm">No items</p>

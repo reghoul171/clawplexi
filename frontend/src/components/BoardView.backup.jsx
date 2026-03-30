@@ -3,11 +3,14 @@ import { LayoutGrid, Kanban, ArrowRight, CheckCircle2, Circle, Loader2 } from 'l
 function BoardView({ project }) {
   // Group implementation steps by status for Kanban columns
   const completedSteps = project.implementation_plan?.filter(s => s.status === 'done') || [];
-  const inProgressSteps = project.implementation_plan?.filter(s => s.status === 'in_progress') || [];
+  const inProgressSteps =
+    project.implementation_plan?.filter(s => s.status === 'in_progress') || [];
   const pendingSteps = project.implementation_plan?.filter(s => s.status === 'pending') || [];
 
   const KanbanColumn = ({ title, steps, icon: Icon, iconColor, borderColor, bgColor }) => (
-    <div className={`flex-1 min-w-[280px] bg-gray-800/50 rounded-xl border ${borderColor} overflow-hidden`}>
+    <div
+      className={`flex-1 min-w-[280px] bg-gray-800/50 rounded-xl border ${borderColor} overflow-hidden`}
+    >
       {/* Column Header */}
       <div className={`px-4 py-3 ${bgColor} border-b ${borderColor}`}>
         <div className="flex items-center justify-between">
@@ -20,11 +23,11 @@ function BoardView({ project }) {
           </span>
         </div>
       </div>
-      
+
       {/* Column Content */}
       <div className="p-3 space-y-2 min-h-[200px] max-h-[400px] overflow-auto">
         {steps.map((step, index) => (
-          <div 
+          <div
             key={index}
             className="p-3 bg-gray-700/50 rounded-lg border border-gray-600/50 hover:border-gray-500 transition-colors"
           >
@@ -34,7 +37,7 @@ function BoardView({ project }) {
             <p className="text-sm text-white">{step.task}</p>
           </div>
         ))}
-        
+
         {steps.length === 0 && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-sm">No items</p>
@@ -67,29 +70,29 @@ function BoardView({ project }) {
           <LayoutGrid className="w-5 h-5 text-blue-400" />
           Preview Mockup
         </h3>
-        
+
         <div className="flex gap-4 overflow-x-auto pb-4">
-          <KanbanColumn 
-            title="Pending" 
-            steps={pendingSteps} 
+          <KanbanColumn
+            title="Pending"
+            steps={pendingSteps}
             icon={Circle}
             iconColor="text-gray-400"
             borderColor="border-gray-600"
             bgColor="bg-gray-700/30"
           />
-          
-          <KanbanColumn 
-            title="In Progress" 
-            steps={inProgressSteps} 
+
+          <KanbanColumn
+            title="In Progress"
+            steps={inProgressSteps}
             icon={Loader2}
             iconColor="text-yellow-400"
             borderColor="border-yellow-600/50"
             bgColor="bg-yellow-900/20"
           />
-          
-          <KanbanColumn 
-            title="Completed" 
-            steps={completedSteps} 
+
+          <KanbanColumn
+            title="Completed"
+            steps={completedSteps}
             icon={CheckCircle2}
             iconColor="text-green-400"
             borderColor="border-green-600/50"
@@ -108,7 +111,7 @@ function BoardView({ project }) {
             'Card priority indicators',
             'Quick task editing',
             'Filter by assignee/status',
-            'Swimlane grouping'
+            'Swimlane grouping',
           ].map((feature, index) => (
             <div key={index} className="flex items-center gap-2 text-gray-300">
               <ArrowRight className="w-4 h-4 text-blue-400" />

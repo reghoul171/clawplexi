@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { 
-  GitBranch, 
-  ChevronDown, 
+import {
+  GitBranch,
+  ChevronDown,
   ChevronRight,
   CheckCircle2,
   Clock,
   Lightbulb,
   ArrowRight,
   CircleDot,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 
 function DecisionTree({ project }) {
@@ -30,7 +30,7 @@ function DecisionTree({ project }) {
     );
   }
 
-  const toggleDecision = (index) => {
+  const toggleDecision = index => {
     setExpandedDecision(expandedDecision === index ? null : index);
   };
 
@@ -70,20 +70,17 @@ function DecisionTree({ project }) {
               const isExpanded = expandedDecision === index;
 
               return (
-                <div 
-                  key={item.node_id || index} 
-                  className="relative pl-12"
-                >
+                <div key={item.node_id || index} className="relative pl-12">
                   {/* Timeline Node */}
                   <div className="absolute left-2 w-5 h-5 rounded-full border-2 border-gray-800 flex items-center justify-center bg-blue-500">
                     <div className="w-2 h-2 rounded-full bg-white" />
                   </div>
 
                   {/* Decision Card */}
-                  <div 
+                  <div
                     className={`rounded-xl overflow-hidden transition-all duration-300 ${
-                      isExpanded 
-                        ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/10' 
+                      isExpanded
+                        ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/10'
                         : 'hover:bg-gray-700/50'
                     }`}
                   >
@@ -105,9 +102,7 @@ function DecisionTree({ project }) {
                           </div>
 
                           {/* Decision Title */}
-                          <h4 className="text-white font-medium mb-1">
-                            {item.decision}
-                          </h4>
+                          <h4 className="text-white font-medium mb-1">{item.decision}</h4>
 
                           {/* What was chosen */}
                           <div className="flex items-center gap-2 text-sm">
@@ -194,7 +189,9 @@ function DecisionTree({ project }) {
                               <div className="flex items-center gap-4">
                                 <div>
                                   <span className="text-gray-500">Decision:</span>
-                                  <span className="ml-2 text-white font-medium">{item.decision}</span>
+                                  <span className="ml-2 text-white font-medium">
+                                    {item.decision}
+                                  </span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
@@ -222,9 +219,7 @@ function DecisionTree({ project }) {
             <div className="absolute left-2 w-5 h-5 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
               <div className="w-2 h-2 rounded-full bg-gray-500" />
             </div>
-            <div className="text-sm text-gray-500 py-2">
-              Project Start
-            </div>
+            <div className="text-sm text-gray-500 py-2">Project Start</div>
           </div>
         </div>
       </div>

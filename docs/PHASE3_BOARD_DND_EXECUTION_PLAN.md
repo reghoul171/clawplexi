@@ -15,15 +15,15 @@ This document provides a prioritized, sequenced task list for implementing the P
 
 ## Task Summary
 
-| Phase | Tasks | Est. Time | Risk Level |
-|-------|-------|-----------|------------|
-| Phase 0: Prerequisites | 3 tasks | 15 min | Low |
-| Phase 1: Backend | 4 tasks | 45 min | Medium |
-| Phase 2: Frontend Foundation | 5 tasks | 30 min | Low |
-| Phase 3: Frontend DnD Core | 5 tasks | 60 min | Medium |
-| Phase 4: Integration | 3 tasks | 20 min | Low |
-| Phase 5: Testing | 5 tasks | 30 min | Medium |
-| **Total** | **25 tasks** | **~3.5 hrs** | - |
+| Phase                        | Tasks        | Est. Time    | Risk Level |
+| ---------------------------- | ------------ | ------------ | ---------- |
+| Phase 0: Prerequisites       | 3 tasks      | 15 min       | Low        |
+| Phase 1: Backend             | 4 tasks      | 45 min       | Medium     |
+| Phase 2: Frontend Foundation | 5 tasks      | 30 min       | Low        |
+| Phase 3: Frontend DnD Core   | 5 tasks      | 60 min       | Medium     |
+| Phase 4: Integration         | 3 tasks      | 20 min       | Low        |
+| Phase 5: Testing             | 5 tasks      | 30 min       | Medium     |
+| **Total**                    | **25 tasks** | **~3.5 hrs** | -          |
 
 ---
 
@@ -38,12 +38,14 @@ This document provides a prioritized, sequenced task list for implementing the P
 **Files:** None (package.json modified)
 
 **Command:**
+
 ```bash
 cd ~/openclaw-pm-dashboard/frontend
 npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
 
 **Verification:**
+
 ```bash
 # Check installation
 cat package.json | grep @dnd-kit
@@ -51,6 +53,7 @@ cat package.json | grep @dnd-kit
 ```
 
 **Rollback:**
+
 ```bash
 npm uninstall @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
@@ -64,20 +67,24 @@ npm uninstall @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 **Risk:** None
 
 **Files:**
+
 - `frontend/src/components/BoardView.jsx` → `frontend/src/components/BoardView.backup.jsx`
 
 **Command:**
+
 ```bash
 cp ~/openclaw-pm-dashboard/frontend/src/components/BoardView.jsx \
    ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 ```
 
 **Verification:**
+
 ```bash
 ls -la ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 ```
 
 **Rollback:**
+
 ```bash
 # Restore original
 cp ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx \
@@ -93,6 +100,7 @@ cp ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx \
 **Risk:** Low
 
 **Files to Create:**
+
 ```
 frontend/src/components/BoardView/
 ├── index.jsx           # Main container (to be created in Phase 2)
@@ -106,6 +114,7 @@ frontend/src/components/BoardView/
 ```
 
 **Command:**
+
 ```bash
 mkdir -p ~/openclaw-pm-dashboard/frontend/src/components/BoardView/hooks
 touch ~/openclaw-pm-dashboard/frontend/src/components/BoardView/index.jsx
@@ -118,11 +127,13 @@ touch ~/openclaw-pm-dashboard/frontend/src/components/BoardView/hooks/useStepDra
 ```
 
 **Verification:**
+
 ```bash
 find ~/openclaw-pm-dashboard/frontend/src/components/BoardView -type f
 ```
 
 **Rollback:**
+
 ```bash
 rm -rf ~/openclaw-pm-dashboard/frontend/src/components/BoardView/
 ```
@@ -140,6 +151,7 @@ rm -rf ~/openclaw-pm-dashboard/frontend/src/components/BoardView/
 **File to Create:** `backend/lib/projectState.js`
 
 **Implementation:**
+
 ```javascript
 const fs = require('fs').promises;
 const path = require('path');
@@ -151,7 +163,7 @@ const path = require('path');
  */
 async function readProjectState(projectPath) {
   const stateFile = path.join(projectPath, '.project_state.json');
-  
+
   try {
     const content = await fs.readFile(stateFile, 'utf8');
     return JSON.parse(content);
@@ -171,21 +183,21 @@ async function readProjectState(projectPath) {
  */
 async function updateProjectState(projectPath, updates) {
   const stateFile = path.join(projectPath, '.project_state.json');
-  
+
   // Read existing state
   const existing = await readProjectState(projectPath);
   if (!existing) {
     throw new Error(`Project state not found at ${projectPath}`);
   }
-  
+
   // Merge updates
   const updatedState = { ...existing, ...updates };
-  
+
   // Write back atomically
   const tempFile = `${stateFile}.tmp`;
   await fs.writeFile(tempFile, JSON.stringify(updatedState, null, 2));
   await fs.rename(tempFile, stateFile);
-  
+
   return updatedState;
 }
 
@@ -201,40 +213,37 @@ async function updateStepStatus(projectPath, stepId, newStatus) {
   if (!state) {
     throw new Error('Project state not found');
   }
-  
-  const stepIndex = state.implementation_plan.findIndex(
-    s => String(s.step) === String(stepId)
-  );
-  
+
+  const stepIndex = state.implementation_plan.findIndex(s => String(s.step) === String(stepId));
+
   if (stepIndex === -1) {
     throw new Error(`Step ${stepId} not found`);
   }
-  
+
   const previousStatus = state.implementation_plan[stepIndex].status;
-  
+
   const updatedPlan = state.implementation_plan.map(step =>
-    String(step.step) === String(stepId)
-      ? { ...step, status: newStatus }
-      : step
+    String(step.step) === String(stepId) ? { ...step, status: newStatus } : step
   );
-  
+
   await updateProjectState(projectPath, { implementation_plan: updatedPlan });
-  
+
   return {
     updatedPlan,
     previousStatus,
-    stepId
+    stepId,
   };
 }
 
 module.exports = {
   readProjectState,
   updateProjectState,
-  updateStepStatus
+  updateStepStatus,
 };
 ```
 
 **Verification:**
+
 ```bash
 # Check file exists and has correct exports
 node -e "const ps = require('./lib/projectState'); console.log(Object.keys(ps))"
@@ -242,9 +251,11 @@ node -e "const ps = require('./lib/projectState'); console.log(Object.keys(ps))"
 ```
 
 **Testing Checkpoint:**
+
 - Unit test the helper functions with a sample .project_state.json file
 
 **Rollback:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/backend/lib/projectState.js
 ```
@@ -262,73 +273,77 @@ rm ~/openclaw-pm-dashboard/backend/lib/projectState.js
 **Location:** Inside `io.on('connection', ...)` block (around line 430)
 
 **Code to Add:**
+
 ```javascript
 // Add after: socket.on('disconnect', ...) handler
 
 // Step status update via WebSocket
-socket.on('step_status_update', async (data) => {
+socket.on('step_status_update', async data => {
   const { projectName, stepId, newStatus, previousStatus } = data;
-  
+
   console.log(`[Socket] Step status update: ${projectName} step ${stepId} -> ${newStatus}`);
-  
+
   try {
     // Get project from database
     const project = await db.getProject(projectName);
-    
+
     if (!project) {
       return socket.emit('step_status_error', {
         projectName,
         stepId,
         error: 'Project not found',
-        previousStatus
+        previousStatus,
       });
     }
-    
+
     // Use project path if available, otherwise construct it
     const projectPath = project.path || path.join(paths.projectsDir, projectName);
-    
+
     // Update step status in file
     const result = await updateStepStatus(projectPath, stepId, newStatus);
-    
+
     // Update database
     const updatedProject = {
       ...project,
-      implementation_plan: result.updatedPlan
+      implementation_plan: result.updatedPlan,
     };
     await db.upsertProject(updatedProject, projectPath);
-    
+
     // Broadcast to ALL clients (including sender)
     io.emit('project_updated', updatedProject);
-    
+
     console.log(`[Socket] Step ${stepId} updated to ${newStatus} in ${projectName}`);
-    
   } catch (error) {
     console.error('[Socket] Step status update error:', error);
-    
+
     socket.emit('step_status_error', {
       projectName,
       stepId,
       error: error.message,
-      previousStatus
+      previousStatus,
     });
   }
 });
 ```
 
 **Also Add Import at Top:**
+
 ```javascript
 // Add with other lib imports (around line 20)
 const { updateStepStatus } = require('./lib/projectState');
 ```
 
 **Verification:**
+
 - Server starts without errors
 - WebSocket connection still works
 
 **Testing Checkpoint:**
+
 - Use WebSocket client to emit 'step_status_update' and verify response
 
 **Rollback:**
+
 - Remove the added socket handler
 - Remove the import statement
 
@@ -345,6 +360,7 @@ const { updateStepStatus } = require('./lib/projectState');
 **Location:** After existing API routes (around line 350, before socket.io section)
 
 **Code to Add:**
+
 ```javascript
 /**
  * PATCH /api/projects/:name/steps/:stepId/status
@@ -353,41 +369,37 @@ const { updateStepStatus } = require('./lib/projectState');
 app.patch('/api/projects/:name/steps/:stepId/status', async (req, res) => {
   const { name, stepId } = req.params;
   const { status } = req.body;
-  
+
   // Validate status
   const validStatuses = ['pending', 'in_progress', 'done'];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({
-      error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+      error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
     });
   }
-  
+
   try {
     // Get project
     const project = await db.getProject(name);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-    
+
     // Find step in implementation plan
-    const stepExists = project.implementation_plan?.some(
-      s => String(s.step) === String(stepId)
-    );
-    
+    const stepExists = project.implementation_plan?.some(s => String(s.step) === String(stepId));
+
     if (!stepExists) {
       return res.status(404).json({ error: `Step ${stepId} not found` });
     }
-    
+
     // Update step status
     const updatedPlan = project.implementation_plan.map(step =>
-      String(step.step) === String(stepId)
-        ? { ...step, status }
-        : step
+      String(step.step) === String(stepId) ? { ...step, status } : step
     );
-    
+
     // Update project
     const projectPath = project.path || path.join(paths.projectsDir, name);
-    
+
     // Update file if path exists
     try {
       await updateProjectState(projectPath, { implementation_plan: updatedPlan });
@@ -395,21 +407,20 @@ app.patch('/api/projects/:name/steps/:stepId/status', async (req, res) => {
       console.warn('[API] Could not update project file:', fileError.message);
       // Continue with database update only
     }
-    
+
     // Update database
     const updatedProject = { ...project, implementation_plan: updatedPlan };
     await db.upsertProject(updatedProject, projectPath);
-    
+
     // Broadcast via WebSocket
     io.emit('project_updated', updatedProject);
-    
+
     // Return success
     res.json({
       success: true,
       step: { step: stepId, status },
-      project: updatedProject
+      project: updatedProject,
     });
-    
   } catch (error) {
     console.error('[API] Error updating step status:', error);
     res.status(500).json({ error: error.message });
@@ -418,12 +429,14 @@ app.patch('/api/projects/:name/steps/:stepId/status', async (req, res) => {
 ```
 
 **Also Add Import:**
+
 ```javascript
 // Add with other lib imports if not already added
 const { updateProjectState } = require('./lib/projectState');
 ```
 
 **Verification:**
+
 ```bash
 # Test the endpoint
 curl -X PATCH http://localhost:3001/api/projects/<project_name>/steps/1/status \
@@ -432,12 +445,14 @@ curl -X PATCH http://localhost:3001/api/projects/<project_name>/steps/1/status \
 ```
 
 **Testing Checkpoint:**
+
 - Test with valid status values
 - Test with invalid status (should return 400)
 - Test with non-existent project (should return 404)
 - Test with non-existent step (should return 404)
 
 **Rollback:**
+
 - Remove the added route
 - Remove the import statement if only used here
 
@@ -452,15 +467,18 @@ curl -X PATCH http://localhost:3001/api/projects/<project_name>/steps/1/status \
 **File to Create:** `backend/docs/websocket-events.md`
 
 **Content:**
-```markdown
+
+````markdown
 # WebSocket Events
 
 ## Client → Server
 
 ### step_status_update
+
 Update the status of an implementation step.
 
 **Payload:**
+
 ```json
 {
   "projectName": "string",
@@ -469,13 +487,16 @@ Update the status of an implementation step.
   "previousStatus": "string"
 }
 ```
+````
 
 ## Server → Client
 
 ### step_status_error
+
 Sent when step status update fails.
 
 **Payload:**
+
 ```json
 {
   "projectName": "string",
@@ -486,8 +507,10 @@ Sent when step status update fails.
 ```
 
 ### project_updated (existing)
+
 Broadcast when project data changes, including step status updates.
-```
+
+````
 
 ---
 
@@ -495,8 +518,8 @@ Broadcast when project data changes, including step status updates.
 
 ### Task 2.1: Create ColumnHeader Component
 
-**Priority:** P1 - Needed by BoardColumn  
-**Est. Effort:** 10 minutes  
+**Priority:** P1 - Needed by BoardColumn
+**Est. Effort:** 10 minutes
 **Risk:** Low
 
 **File to Create:** `frontend/src/components/BoardView/ColumnHeader.jsx`
@@ -524,13 +547,15 @@ function ColumnHeader({ title, count, icon: Icon, iconColor }) {
 }
 
 export default ColumnHeader;
-```
+````
 
 **Verification:**
+
 - File exists
 - No syntax errors (check with `npm run build`)
 
 **Rollback:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/ColumnHeader.jsx
 ```
@@ -546,6 +571,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/ColumnHeader.jsx
 **File to Create:** `frontend/src/components/BoardView/hooks/useStepDrag.js`
 
 **Implementation:**
+
 ```jsx
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { io } from 'socket.io-client';
@@ -560,31 +586,31 @@ export function useStepDrag(project) {
   const [optimisticSteps, setOptimisticSteps] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const socketRef = useRef(null);
   const timeoutRef = useRef(null);
 
   // Initialize socket connection
   useEffect(() => {
     socketRef.current = io(API_URL);
-    
+
     // Listen for errors
-    socketRef.current.on('step_status_error', (data) => {
+    socketRef.current.on('step_status_error', data => {
       console.error('[useStepDrag] Update failed:', data.error);
       setError(data.error);
       setOptimisticSteps(null); // Rollback
       setIsUpdating(false);
     });
-    
+
     // Listen for project updates (confirmation)
-    socketRef.current.on('project_updated', (updatedProject) => {
+    socketRef.current.on('project_updated', updatedProject => {
       if (updatedProject.project_name === project?.project_name) {
         // Server confirmed - clear optimistic state
         setOptimisticSteps(null);
         setIsUpdating(false);
       }
     });
-    
+
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -599,65 +625,65 @@ export function useStepDrag(project) {
    * Handle drag end event
    * @param {Object} event - dnd-kit drag end event
    */
-  const handleDragEnd = useCallback((event) => {
-    const { active, over } = event;
-    
-    // No drop target or same position
-    if (!over || active.id === over.id) {
-      return;
-    }
-    
-    const stepId = active.id;
-    const newStatus = over.id; // Column ID = status
-    
-    // Find current step and its previous status
-    const currentSteps = optimisticSteps ?? project?.implementation_plan ?? [];
-    const currentStep = currentSteps.find(s => String(s.step) === String(stepId));
-    
-    if (!currentStep) {
-      console.error('[useStepDrag] Step not found:', stepId);
-      return;
-    }
-    
-    const previousStatus = currentStep.status;
-    
-    // Skip if status unchanged
-    if (previousStatus === newStatus) {
-      return;
-    }
-    
-    // 1. Optimistic update - immediate UI feedback
-    const updatedSteps = currentSteps.map(step =>
-      String(step.step) === String(stepId)
-        ? { ...step, status: newStatus }
-        : step
-    );
-    
-    setOptimisticSteps(updatedSteps);
-    setIsUpdating(true);
-    setError(null);
-    
-    // 2. Emit to server via WebSocket
-    if (socketRef.current) {
-      socketRef.current.emit('step_status_update', {
-        projectName: project.project_name,
-        stepId,
-        newStatus,
-        previousStatus
-      });
-    }
-    
-    // 3. Set timeout for rollback if no response
-    timeoutRef.current = setTimeout(() => {
-      if (isUpdating) {
-        console.warn('[useStepDrag] Timeout - rolling back');
-        setOptimisticSteps(null);
-        setError('Update timed out');
-        setIsUpdating(false);
+  const handleDragEnd = useCallback(
+    event => {
+      const { active, over } = event;
+
+      // No drop target or same position
+      if (!over || active.id === over.id) {
+        return;
       }
-    }, 5000);
-    
-  }, [project, optimisticSteps, isUpdating]);
+
+      const stepId = active.id;
+      const newStatus = over.id; // Column ID = status
+
+      // Find current step and its previous status
+      const currentSteps = optimisticSteps ?? project?.implementation_plan ?? [];
+      const currentStep = currentSteps.find(s => String(s.step) === String(stepId));
+
+      if (!currentStep) {
+        console.error('[useStepDrag] Step not found:', stepId);
+        return;
+      }
+
+      const previousStatus = currentStep.status;
+
+      // Skip if status unchanged
+      if (previousStatus === newStatus) {
+        return;
+      }
+
+      // 1. Optimistic update - immediate UI feedback
+      const updatedSteps = currentSteps.map(step =>
+        String(step.step) === String(stepId) ? { ...step, status: newStatus } : step
+      );
+
+      setOptimisticSteps(updatedSteps);
+      setIsUpdating(true);
+      setError(null);
+
+      // 2. Emit to server via WebSocket
+      if (socketRef.current) {
+        socketRef.current.emit('step_status_update', {
+          projectName: project.project_name,
+          stepId,
+          newStatus,
+          previousStatus,
+        });
+      }
+
+      // 3. Set timeout for rollback if no response
+      timeoutRef.current = setTimeout(() => {
+        if (isUpdating) {
+          console.warn('[useStepDrag] Timeout - rolling back');
+          setOptimisticSteps(null);
+          setError('Update timed out');
+          setIsUpdating(false);
+        }
+      }, 5000);
+    },
+    [project, optimisticSteps, isUpdating]
+  );
 
   /**
    * Retry failed update
@@ -685,7 +711,7 @@ export function useStepDrag(project) {
     handleDragEnd,
     // Error handlers
     retry,
-    clearError
+    clearError,
   };
 }
 
@@ -693,14 +719,17 @@ export default useStepDrag;
 ```
 
 **Verification:**
+
 - File exists
 - Hook exports correct interface
 
 **Testing Checkpoint:**
+
 - Console logs appear when dragging
 - Socket connection established
 
 **Rollback:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/hooks/useStepDrag.js
 ```
@@ -716,6 +745,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/hooks/useStepDrag.j
 **File to Create:** `frontend/src/components/BoardView/StepCard.jsx`
 
 **Implementation:**
+
 ```jsx
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -725,22 +755,17 @@ import { GripVertical } from 'lucide-react';
  * StepCard - Draggable card for implementation steps
  */
 function StepCard({ step, isDragging }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform
-  } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: String(step.step),
     data: {
       step,
-      status: step.status
-    }
+      status: step.status,
+    },
   });
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
@@ -765,24 +790,24 @@ function StepCard({ step, isDragging }) {
       >
         <GripVertical className="w-4 h-4" />
       </div>
-      
+
       {/* Card content */}
       <div className="pl-6">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-mono text-gray-500">
-            Step {step.step}
-          </span>
+          <span className="text-xs font-mono text-gray-500">Step {step.step}</span>
         </div>
         <p className="text-sm text-white">{step.task}</p>
-        
+
         {/* Show status badge if different from column */}
         {step.status && (
-          <span className={`
+          <span
+            className={`
             inline-block mt-2 text-xs px-2 py-0.5 rounded
             ${step.status === 'done' ? 'bg-green-900/50 text-green-300' : ''}
             ${step.status === 'in_progress' ? 'bg-yellow-900/50 text-yellow-300' : ''}
             ${step.status === 'pending' ? 'bg-gray-600 text-gray-300' : ''}
-          `}>
+          `}
+          >
             {step.status}
           </span>
         )}
@@ -795,10 +820,12 @@ export default StepCard;
 ```
 
 **Verification:**
+
 - File exists
 - useDraggable imported from @dnd-kit/core
 
 **Rollback:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/StepCard.jsx
 ```
@@ -814,6 +841,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/StepCard.jsx
 **File to Create:** `frontend/src/components/BoardView/DragOverlay.jsx`
 
 **Implementation:**
+
 ```jsx
 import { DragOverlay as DndDragOverlay } from '@dnd-kit/core';
 
@@ -826,15 +854,15 @@ function StepDragOverlay({ activeStep }) {
 
   return (
     <DndDragOverlay>
-      <div className="
+      <div
+        className="
         p-3 bg-gray-600 rounded-lg border border-blue-400/50
         shadow-xl rotate-3 scale-105
         pointer-events-none
-      ">
+      "
+      >
         <div className="pl-6">
-          <span className="text-xs font-mono text-gray-400">
-            Step {activeStep.step}
-          </span>
+          <span className="text-xs font-mono text-gray-400">Step {activeStep.step}</span>
           <p className="text-sm text-white mt-1">{activeStep.task}</p>
         </div>
       </div>
@@ -846,6 +874,7 @@ export default StepDragOverlay;
 ```
 
 **Rollback:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/DragOverlay.jsx
 ```
@@ -861,6 +890,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/DragOverlay.jsx
 **File to Create:** `frontend/src/components/BoardView/index.js`
 
 **Implementation:**
+
 ```javascript
 export { default as BoardColumn } from './BoardColumn';
 export { default as StepCard } from './StepCard';
@@ -871,6 +901,7 @@ export { default } from './index.jsx';
 ```
 
 **Rollback:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/index.js
 ```
@@ -888,6 +919,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/index.js
 **File to Create:** `frontend/src/components/BoardView/BoardColumn.jsx`
 
 **Implementation:**
+
 ```jsx
 import { useDroppable } from '@dnd-kit/core';
 import ColumnHeader from './ColumnHeader';
@@ -896,21 +928,12 @@ import StepCard from './StepCard';
 /**
  * BoardColumn - Droppable Kanban column
  */
-function BoardColumn({
-  id,
-  title,
-  steps,
-  icon: Icon,
-  iconColor,
-  borderColor,
-  bgColor,
-  activeId
-}) {
+function BoardColumn({ id, title, steps, icon: Icon, iconColor, borderColor, bgColor, activeId }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: {
-      status: id
-    }
+      status: id,
+    },
   });
 
   return (
@@ -925,24 +948,15 @@ function BoardColumn({
     >
       {/* Header */}
       <div className={bgColor}>
-        <ColumnHeader
-          title={title}
-          count={steps.length}
-          icon={Icon}
-          iconColor={iconColor}
-        />
+        <ColumnHeader title={title} count={steps.length} icon={Icon} iconColor={iconColor} />
       </div>
-      
+
       {/* Cards container */}
       <div className="p-3 space-y-2 min-h-[200px] max-h-[400px] overflow-auto">
-        {steps.map((step) => (
-          <StepCard
-            key={step.step}
-            step={step}
-            isDragging={String(step.step) === activeId}
-          />
+        {steps.map(step => (
+          <StepCard key={step.step} step={step} isDragging={String(step.step) === activeId} />
         ))}
-        
+
         {steps.length === 0 && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-sm">No items</p>
@@ -957,14 +971,17 @@ export default BoardColumn;
 ```
 
 **Verification:**
+
 - useDroppable works correctly
 - Column renders steps
 
 **Testing Checkpoint:**
+
 - Column shows "No items" when empty
 - Column shows all assigned steps
 
 **Rollback:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/BoardColumn.jsx
 ```
@@ -980,6 +997,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView/BoardColumn.jsx
 **File to Create:** `frontend/src/components/BoardView/index.jsx`
 
 **Implementation:**
+
 ```jsx
 import { useState, useMemo } from 'react';
 import {
@@ -989,7 +1007,7 @@ import {
   useSensor,
   useSensors,
   DragOverlay,
-  closestCenter
+  closestCenter,
 } from '@dnd-kit/core';
 import { LayoutGrid, Kanban, Circle, Loader2, CheckCircle2 } from 'lucide-react';
 
@@ -1002,7 +1020,7 @@ import { useStepDrag } from './hooks/useStepDrag';
  */
 function BoardView({ project }) {
   const [activeId, setActiveId] = useState(null);
-  
+
   const { steps, handleDragEnd, isUpdating, error, clearError } = useStepDrag(project);
 
   // Configure sensors for drag detection
@@ -1020,7 +1038,7 @@ function BoardView({ project }) {
     const pending = steps.filter(s => s.status === 'pending');
     const inProgress = steps.filter(s => s.status === 'in_progress');
     const done = steps.filter(s => s.status === 'done');
-    
+
     return { pending, inProgress, done };
   }, [steps]);
 
@@ -1031,12 +1049,12 @@ function BoardView({ project }) {
   }, [activeId, steps]);
 
   // Handle drag start
-  const handleDragStart = (event) => {
+  const handleDragStart = event => {
     setActiveId(String(event.active.id));
   };
 
   // Handle drag end
-  const onDragEnd = (event) => {
+  const onDragEnd = event => {
     setActiveId(null);
     handleDragEnd(event);
   };
@@ -1047,11 +1065,7 @@ function BoardView({ project }) {
   };
 
   if (!project) {
-    return (
-      <div className="text-center text-gray-400 py-12">
-        No project selected
-      </div>
-    );
+    return <div className="text-center text-gray-400 py-12">No project selected</div>;
   }
 
   return (
@@ -1075,10 +1089,7 @@ function BoardView({ project }) {
       {error && (
         <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 flex items-center justify-between">
           <span className="text-red-300">{error}</span>
-          <button
-            onClick={clearError}
-            className="text-red-400 hover:text-white"
-          >
+          <button onClick={clearError} className="text-red-400 hover:text-white">
             ✕
           </button>
         </div>
@@ -1104,7 +1115,7 @@ function BoardView({ project }) {
             bgColor="bg-gray-700/30"
             activeId={activeId}
           />
-          
+
           {/* In Progress Column */}
           <BoardColumn
             id="in_progress"
@@ -1116,7 +1127,7 @@ function BoardView({ project }) {
             bgColor="bg-yellow-900/20"
             activeId={activeId}
           />
-          
+
           {/* Done Column */}
           <BoardColumn
             id="done"
@@ -1135,9 +1146,7 @@ function BoardView({ project }) {
           {activeStep && (
             <div className="p-3 bg-gray-600 rounded-lg border border-blue-400/50 shadow-xl rotate-3 scale-105 pointer-events-none">
               <div className="pl-6">
-                <span className="text-xs font-mono text-gray-400">
-                  Step {activeStep.step}
-                </span>
+                <span className="text-xs font-mono text-gray-400">Step {activeStep.step}</span>
                 <p className="text-sm text-white mt-1">{activeStep.task}</p>
               </div>
             </div>
@@ -1160,15 +1169,18 @@ export default BoardView;
 ```
 
 **Verification:**
+
 - Board renders with three columns
 - Steps appear in correct columns
 - Drag sensors configured
 
 **Testing Checkpoint:**
+
 - Can see the board
 - Columns show correct step counts
 
 **Rollback:**
+
 - Replace with backup: `cp BoardView.backup.jsx BoardView.jsx`
 
 ---
@@ -1182,6 +1194,7 @@ export default BoardView;
 **File to Modify:** `frontend/src/index.css` (or add to Tailwind config)
 
 **Add to CSS:**
+
 ```css
 /* Drag and drop animations */
 .step-card {
@@ -1204,8 +1217,12 @@ export default BoardView;
 }
 
 @keyframes float {
-  0% { transform: scale(1) rotate(0deg); }
-  100% { transform: scale(1.05) rotate(3deg); }
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(1.05) rotate(3deg);
+  }
 }
 
 .drag-preview {
@@ -1246,6 +1263,7 @@ export default BoardView;
 **File to Modify:** `frontend/src/App.jsx`
 
 **Change:**
+
 ```jsx
 // Before
 import BoardView from './components/BoardView';
@@ -1257,6 +1275,7 @@ import BoardView from './components/BoardView';
 No change needed - the import path stays the same because we're using `index.jsx` in the `BoardView/` folder.
 
 **Verification:**
+
 - App loads without errors
 - Board view tab works
 
@@ -1269,6 +1288,7 @@ No change needed - the import path stays the same because we're using `index.jsx
 **Risk:** None
 
 **Command:**
+
 ```bash
 rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 ```
@@ -1298,6 +1318,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 **Risk:** Medium
 
 **Test Cases:**
+
 1. Drag from Pending to In Progress
 2. Drag from In Progress to Done
 3. Drag from Done back to In Progress
@@ -1305,12 +1326,14 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 5. Rapid consecutive drags
 
 **Expected Results:**
+
 - Card moves immediately on drop
 - Server receives update
 - WebSocket broadcasts change
 - All connected clients update
 
 **How to Test:**
+
 ```
 1. Open two browser tabs with dashboard
 2. In Tab 1, drag a card from Pending to In Progress
@@ -1328,11 +1351,13 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 **Risk:** Medium
 
 **Test Cases:**
+
 1. Drag card - should move immediately
 2. Backend down - should still move, then show error
 3. Slow network - should move, then sync
 
 **Expected Results:**
+
 - UI updates before server confirms
 - Loading indicator shows during update
 - Rollback on error with toast message
@@ -1346,11 +1371,13 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 **Risk:** Medium
 
 **Test Cases:**
+
 1. Disconnect backend, drag card - should show error
 2. Invalid status value - should show error
 3. Network timeout - should rollback
 
 **Expected Results:**
+
 - Error toast appears
 - Card returns to original position
 - "Retry" option available
@@ -1364,6 +1391,7 @@ rm ~/openclaw-pm-dashboard/frontend/src/components/BoardView.backup.jsx
 **Risk:** Low
 
 **Test Cases:**
+
 ```bash
 # Direct REST API call
 curl -X PATCH http://localhost:3001/api/projects/test-project/steps/1/status \
@@ -1372,6 +1400,7 @@ curl -X PATCH http://localhost:3001/api/projects/test-project/steps/1/status \
 ```
 
 **Expected Results:**
+
 - Returns success JSON
 - WebSocket clients receive update
 - File updated on disk
@@ -1385,6 +1414,7 @@ curl -X PATCH http://localhost:3001/api/projects/test-project/steps/1/status \
 **Risk:** Low
 
 **Test Cases:**
+
 1. Keyboard navigation (Tab between cards)
 2. Focus visible on drag handle
 3. Screen reader announces status changes
@@ -1486,6 +1516,6 @@ Phase 3 is complete when:
 
 ---
 
-*Document Version: 1.0.0*  
-*Created: 2026-03-28*  
-*Ready for Developer Agent*
+_Document Version: 1.0.0_  
+_Created: 2026-03-28_  
+_Ready for Developer Agent_

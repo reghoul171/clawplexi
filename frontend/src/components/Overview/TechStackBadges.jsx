@@ -6,11 +6,11 @@ import { getTechColors } from '../../utils/techStackColors';
 
 function TechStackBadges({ techStack }) {
   const colors = getTechColors(techStack);
-  
+
   if (!colors || colors.length === 0) {
     return null;
   }
-  
+
   return (
     <section className="bg-gray-800 rounded-xl p-6">
       <h3 className="text-lg font-semibold text-white mb-4">Tech Stack</h3>

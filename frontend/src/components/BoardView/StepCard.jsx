@@ -12,13 +12,13 @@ import { TaskMetadata } from './TaskMetadata';
 function QuickStatusDropdown({ currentStatus, onStatusChange, disabled }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-  
+
   const statusOptions = [
     { value: 'pending', icon: Clock, label: 'Pending', color: 'text-gray-300' },
     { value: 'in_progress', icon: Play, label: 'In Progress', color: 'text-yellow-300' },
-    { value: 'done', icon: CheckCircle, label: 'Done', color: 'text-green-300' }
+    { value: 'done', icon: CheckCircle, label: 'Done', color: 'text-green-300' },
   ];
-  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -26,22 +26,22 @@ function QuickStatusDropdown({ currentStatus, onStatusChange, disabled }) {
         setIsOpen(false);
       }
     }
-    
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen]);
-  
-  const handleSelect = (status) => {
+
+  const handleSelect = status => {
     onStatusChange(status);
     setIsOpen(false);
   };
-  
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={(e) => {
+        onClick={e => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
@@ -50,13 +50,15 @@ function QuickStatusDropdown({ currentStatus, onStatusChange, disabled }) {
         title="Change status"
       >
         <span className="text-xs">Status</span>
-        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
-      
+
       {isOpen && (
-        <div 
+        <div
           className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg py-1 min-w-[120px] z-10"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {statusOptions.map(({ value, icon: Icon, label, color }) => (
             <button
@@ -68,9 +70,7 @@ function QuickStatusDropdown({ currentStatus, onStatusChange, disabled }) {
             >
               <Icon className={`w-3.5 h-3.5 ${color}`} />
               <span className={color}>{label}</span>
-              {value === currentStatus && (
-                <span className="ml-auto text-gray-400">✓</span>
-              )}
+              {value === currentStatus && <span className="ml-auto text-gray-400">✓</span>}
             </button>
           ))}
         </div>
@@ -84,15 +84,15 @@ function QuickStatusDropdown({ currentStatus, onStatusChange, disabled }) {
  */
 function ProgressBar({ stepIndex, totalSteps, status }) {
   const progress = totalSteps > 0 ? ((stepIndex + 1) / totalSteps) * 100 : 0;
-  
+
   return (
     <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
-      <div 
+      <div
         className={`h-full transition-all duration-500 ease-out ${
-          status === 'done' 
-            ? 'bg-green-500' 
-            : status === 'in_progress' 
-              ? 'bg-yellow-500' 
+          status === 'done'
+            ? 'bg-green-500'
+            : status === 'in_progress'
+              ? 'bg-yellow-500'
               : 'bg-gray-500'
         }`}
         style={{ width: `${progress}%` }}
@@ -104,31 +104,18 @@ function ProgressBar({ stepIndex, totalSteps, status }) {
 /**
  * StepCard - Draggable card for implementation steps
  */
-function StepCard({ 
-  step, 
-  isDragging, 
-  totalSteps, 
-  stepIndex, 
-  onEdit, 
-  onDelete, 
-  onStatusChange 
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform
-  } = useDraggable({
+function StepCard({ step, isDragging, totalSteps, stepIndex, onEdit, onDelete, onStatusChange }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: String(step.step),
     data: {
       step,
-      status: step.status
-    }
+      status: step.status,
+    },
   });
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
@@ -147,7 +134,7 @@ function StepCard({
       <div className="absolute top-0 left-0 right-0">
         <ProgressBar stepIndex={stepIndex} totalSteps={totalSteps} status={step.status} />
       </div>
-      
+
       {/* Drag handle */}
       <div
         className="absolute left-1 top-1/2 -translate-y-1/2 
@@ -160,30 +147,26 @@ function StepCard({
       >
         <GripVertical className="w-4 h-4" />
       </div>
-      
+
       {/* Card content */}
       <div className="pl-6 pt-1">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <TaskPriorityIcon 
-              task={step.task} 
-              stepIndex={stepIndex} 
-              totalSteps={totalSteps} 
-            />
+            <TaskPriorityIcon task={step.task} stepIndex={stepIndex} totalSteps={totalSteps} />
           </div>
-          
+
           {/* Hover actions */}
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             {onStatusChange && (
-              <QuickStatusDropdown 
+              <QuickStatusDropdown
                 currentStatus={step.status}
-                onStatusChange={(status) => onStatusChange(step, status)}
+                onStatusChange={status => onStatusChange(step, status)}
                 disabled={isDragging}
               />
             )}
             {onEdit && (
               <button
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onEdit(step);
                 }}
@@ -195,7 +178,7 @@ function StepCard({
             )}
             {onDelete && (
               <button
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onDelete(step);
                 }}
@@ -207,16 +190,12 @@ function StepCard({
             )}
           </div>
         </div>
-        
+
         <p className="text-sm text-white leading-snug">{step.task}</p>
-        
+
         {/* Metadata */}
-        <TaskMetadata 
-          step={step} 
-          stepIndex={stepIndex} 
-          totalSteps={totalSteps} 
-        />
-        
+        <TaskMetadata step={step} stepIndex={stepIndex} totalSteps={totalSteps} />
+
         {/* Status badge */}
         <div className="mt-2">
           <TaskStatusBadge status={step.status} size="sm" />

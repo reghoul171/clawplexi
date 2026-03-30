@@ -10,9 +10,7 @@ function ColumnHeader({ title, count, icon: Icon, iconColor }) {
           {Icon && <Icon className={`w-4 h-4 ${iconColor}`} />}
           <h3 className="font-medium text-white">{title}</h3>
         </div>
-        <span className="text-xs bg-gray-700 px-2 py-0.5 rounded-full text-gray-300">
-          {count}
-        </span>
+        <span className="text-xs bg-gray-700 px-2 py-0.5 rounded-full text-gray-300">{count}</span>
       </div>
     </div>
   );

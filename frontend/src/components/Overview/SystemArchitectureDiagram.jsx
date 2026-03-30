@@ -23,15 +23,15 @@ function initMermaid() {
         secondaryColor: '#1f2937',
         tertiaryColor: '#374151',
         subGraphBg: '#1f2937',
-        subGraphBorderColor: '#374151'
+        subGraphBorderColor: '#374151',
       },
       flowchart: {
         curve: 'basis',
         padding: 15,
         nodeSpacing: 30,
         rankSpacing: 50,
-        useMaxWidth: true
-      }
+        useMaxWidth: true,
+      },
     });
     mermaidInitialized = true;
   }
@@ -45,37 +45,37 @@ function SystemArchitectureDiagram({ decisionTree = [], techStack = [] }) {
   const containerRef = useRef(null);
   const [svgContent, setSvgContent] = useState('');
   const [error, setError] = useState(null);
-  
+
   // Generate diagram definition
   const diagramDefinition = useMemo(() => {
     return generateArchitectureDiagram(decisionTree, techStack);
   }, [decisionTree, techStack]);
-  
+
   // Check if we have data to display
   const hasData = diagramDefinition && diagramDefinition.length > 0;
-  
+
   useEffect(() => {
     if (!hasData) {
       setSvgContent('');
       setError(null);
       return;
     }
-    
+
     let isMounted = true;
-    
+
     const renderDiagram = async () => {
       // Initialize mermaid lazily
       initMermaid();
-      
+
       const id = `system-arch-diagram-${++diagramId}`;
-      
+
       try {
         // Validate syntax first (recommended for mermaid 11+)
         await mermaid.parse(diagramDefinition);
-        
+
         // Render the diagram
         const { svg } = await mermaid.render(id, diagramDefinition);
-        
+
         if (isMounted) {
           setSvgContent(svg);
           setError(null);
@@ -88,14 +88,14 @@ function SystemArchitectureDiagram({ decisionTree = [], techStack = [] }) {
         }
       }
     };
-    
+
     renderDiagram();
-    
+
     return () => {
       isMounted = false;
     };
   }, [diagramDefinition, hasData]);
-  
+
   // No data fallback
   if (!hasData) {
     return (
@@ -112,7 +112,7 @@ function SystemArchitectureDiagram({ decisionTree = [], techStack = [] }) {
       </section>
     );
   }
-  
+
   // Error state
   if (error) {
     return (
@@ -129,7 +129,7 @@ function SystemArchitectureDiagram({ decisionTree = [], techStack = [] }) {
       </section>
     );
   }
-  
+
   return (
     <section className="bg-gray-800 rounded-xl p-6">
       <div className="flex items-center justify-between mb-4">
@@ -143,7 +143,7 @@ function SystemArchitectureDiagram({ decisionTree = [], techStack = [] }) {
           </span>
         )}
       </div>
-      <div 
+      <div
         ref={containerRef}
         className="overflow-x-auto min-h-[200px] flex items-center justify-center"
         dangerouslySetInnerHTML={{ __html: svgContent }}

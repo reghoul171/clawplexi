@@ -3,7 +3,7 @@ import { statusConfig } from './TaskStatusBadge';
 
 /**
  * TaskCardEditor - Modal for editing task details
- * 
+ *
  * @param {Object} step - The step being edited
  * @param {Object} form - Form state { task, status, notes }
  * @param {Function} onChange - Called when form values change
@@ -12,16 +12,8 @@ import { statusConfig } from './TaskStatusBadge';
  * @param {boolean} isSaving - Shows loading state when true
  * @param {string} error - Error message to display
  */
-export function TaskCardEditor({ 
-  step, 
-  form, 
-  onChange, 
-  onSave, 
-  onCancel, 
-  isSaving, 
-  error 
-}) {
-  const handleKeyDown = (e) => {
+export function TaskCardEditor({ step, form, onChange, onSave, onCancel, isSaving, error }) {
+  const handleKeyDown = e => {
     if (e.key === 'Enter' && e.ctrlKey) {
       onSave();
     }
@@ -31,12 +23,12 @@ export function TaskCardEditor({
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200" 
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200"
       onClick={onCancel}
     >
-      <div 
-        className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700 shadow-2xl animate-in zoom-in-95 duration-200" 
+      <div
+        className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700 shadow-2xl animate-in zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
@@ -46,27 +38,25 @@ export function TaskCardEditor({
             <FileText className="w-5 h-5 text-blue-400" />
             Edit Step {step.step}
           </h3>
-          <button 
-            onClick={onCancel} 
+          <button
+            onClick={onCancel}
             className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-gray-700 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         {/* Error message */}
         {error && (
           <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
             {error}
           </div>
         )}
-        
+
         <div className="space-y-4">
           {/* Task Name */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5 font-medium">
-              Task Name
-            </label>
+            <label className="block text-sm text-gray-400 mb-1.5 font-medium">Task Name</label>
             <input
               type="text"
               value={form.task}
@@ -79,7 +69,7 @@ export function TaskCardEditor({
               disabled={isSaving}
             />
           </div>
-          
+
           {/* Status dropdown */}
           <div>
             <label className="block text-sm text-gray-400 mb-1.5 font-medium flex items-center gap-2">
@@ -99,7 +89,7 @@ export function TaskCardEditor({
               <option value="done">Done</option>
             </select>
           </div>
-          
+
           {/* Notes/Description field */}
           <div>
             <label className="block text-sm text-gray-400 mb-1.5 font-medium">
@@ -115,12 +105,10 @@ export function TaskCardEditor({
               rows={3}
               disabled={isSaving}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Press Ctrl+Enter to save
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Press Ctrl+Enter to save</p>
           </div>
         </div>
-        
+
         {/* Action buttons */}
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-700">
           <button

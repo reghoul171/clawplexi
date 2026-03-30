@@ -30,7 +30,7 @@ function App() {
 
   // Keyboard shortcuts for view switching (Alt+1/2/3/4)
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = e => {
       if (e.altKey) {
         switch (e.key) {
           case '1':
@@ -62,7 +62,7 @@ function App() {
   const fetchProjects = useCallback(() => {
     setLoading(true);
     setFetchError(null);
-    
+
     fetch(`${API_URL}/api/projects`)
       .then(res => {
         if (!res.ok) {
@@ -116,7 +116,7 @@ function App() {
       setConnectionStatus('disconnected');
     });
 
-    socket.on('connect_error', (error) => {
+    socket.on('connect_error', error => {
       console.log('Connection error:', error.message);
       setConnected(false);
       setConnectionStatus('disconnected');
@@ -124,7 +124,7 @@ function App() {
 
     // Only set connected=true after receiving initial_state from server
     // This ensures the server actually responded with data
-    socket.on('initial_state', (initialProjects) => {
+    socket.on('initial_state', initialProjects => {
       console.log('Received initial_state from server');
       setProjects(initialProjects);
       if (initialProjects.length > 0 && !activeProject) {
@@ -135,7 +135,7 @@ function App() {
       setConnectionStatus('connected');
     });
 
-    socket.on('project_updated', (updatedProject) => {
+    socket.on('project_updated', updatedProject => {
       setProjects(prev => {
         const existing = prev.findIndex(p => p.project_name === updatedProject.project_name);
         if (existing >= 0) {
@@ -172,7 +172,9 @@ function App() {
     }, 10000);
 
     // Update last data time on any socket event
-    const updateLastDataTime = () => { lastDataTime = Date.now(); };
+    const updateLastDataTime = () => {
+      lastDataTime = Date.now();
+    };
     socket.onAny(updateLastDataTime);
 
     return () => {
@@ -212,15 +214,9 @@ function App() {
               <AlertCircle className="w-8 h-8 text-red-400" />
             </div>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">
-            Connection Error
-          </h2>
-          <p className="text-gray-400 mb-2">
-            Unable to connect to the server.
-          </p>
-          <p className="text-sm text-gray-500 mb-6">
-            {fetchError}
-          </p>
+          <h2 className="text-xl font-semibold text-white mb-2">Connection Error</h2>
+          <p className="text-gray-400 mb-2">Unable to connect to the server.</p>
+          <p className="text-sm text-gray-500 mb-6">{fetchError}</p>
           <button
             onClick={handleRetry}
             disabled={loading}
@@ -244,7 +240,7 @@ function App() {
           connected={connected}
           onViewChange={setActiveView}
         />
-        
+
         <main className="flex-1 flex flex-col overflow-hidden">
           {activeProject ? (
             <>
@@ -254,7 +250,9 @@ function App() {
                   {/* Project Name */}
                   <div className="flex items-center gap-4">
                     <div>
-                      <h1 className="text-2xl font-bold text-white">{activeProject.project_name}</h1>
+                      <h1 className="text-2xl font-bold text-white">
+                        {activeProject.project_name}
+                      </h1>
                       <span className="inline-block mt-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
                         {activeProject.editor_used}
                       </span>
@@ -262,22 +260,25 @@ function App() {
                   </div>
 
                   {/* ViewSwitcher */}
-                  <ViewSwitcher 
-                    activeView={activeView} 
-                    onViewChange={setActiveView} 
-                  />
+                  <ViewSwitcher activeView={activeView} onViewChange={setActiveView} />
 
                   {/* Connection Status */}
                   <div className="flex items-center gap-2" data-testid="connection-status">
-                    <span className={`w-2 h-2 rounded-full ${
-                      connectionStatus === 'connected' ? 'bg-green-500' :
-                      connectionStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
-                      'bg-red-500'
-                    }`}></span>
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        connectionStatus === 'connected'
+                          ? 'bg-green-500'
+                          : connectionStatus === 'connecting'
+                            ? 'bg-yellow-500 animate-pulse'
+                            : 'bg-red-500'
+                      }`}
+                    ></span>
                     <span className="text-sm text-gray-400" data-testid="connection-text">
-                      {connectionStatus === 'connected' ? 'Connected' :
-                       connectionStatus === 'connecting' ? 'Connecting...' :
-                       'Disconnected'}
+                      {connectionStatus === 'connected'
+                        ? 'Connected'
+                        : connectionStatus === 'connecting'
+                          ? 'Connecting...'
+                          : 'Disconnected'}
                     </span>
                   </div>
                 </div>

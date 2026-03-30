@@ -38,13 +38,13 @@ openclaw-pm-dashboard/
 
 ### Current Pain Points
 
-| Issue | Impact | Severity |
-|-------|--------|----------|
-| Hardcoded paths in `.env` | Not portable | High |
-| In-memory state (Map) | Lost on restart | Critical |
-| No state persistence | No migration support | Critical |
-| No sync mechanism | Multi-machine conflicts | Medium |
-| Manual deployment | Setup friction | Medium |
+| Issue                     | Impact                  | Severity |
+| ------------------------- | ----------------------- | -------- |
+| Hardcoded paths in `.env` | Not portable            | High     |
+| In-memory state (Map)     | Lost on restart         | Critical |
+| No state persistence      | No migration support    | Critical |
+| No sync mechanism         | Multi-machine conflicts | Medium   |
+| Manual deployment         | Setup friction          | Medium   |
 
 ### Key Constraints
 
@@ -139,11 +139,7 @@ Configuration is loaded in this order (later overrides earlier):
     "branch": "main"
   },
   "watcher": {
-    "ignorePatterns": [
-      "**/node_modules/**",
-      "**/.git/**",
-      "**/dist/**"
-    ]
+    "ignorePatterns": ["**/node_modules/**", "**/.git/**", "**/dist/**"]
   }
 }
 ```
@@ -152,15 +148,15 @@ Configuration is loaded in this order (later overrides earlier):
 
 All environment variables use the `PM_DASHBOARD_` prefix:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PM_DASHBOARD_PORT` | 3001 | Backend server port |
-| `PM_DASHBOARD_HOST` | localhost | Server bind host |
-| `PM_DASHBOARD_PROJECTS_DIR` | `~/.openclaw/shared-project` | Projects directory |
-| `PM_DASHBOARD_STATE_FILE` | `~/.openclaw/pm-dashboard/state.db` | SQLite database path |
-| `PM_DASHBOARD_SYNC_ENABLED` | true | Enable Git sync |
-| `PM_DASHBOARD_SYNC_INTERVAL` | 30000 | Sync interval in ms |
-| `PM_DASHBOARD_CONFIG_FILE` | `~/.openclaw/pm-dashboard/config.json` | Custom config path |
+| Variable                     | Default                                | Description          |
+| ---------------------------- | -------------------------------------- | -------------------- |
+| `PM_DASHBOARD_PORT`          | 3001                                   | Backend server port  |
+| `PM_DASHBOARD_HOST`          | localhost                              | Server bind host     |
+| `PM_DASHBOARD_PROJECTS_DIR`  | `~/.openclaw/shared-project`           | Projects directory   |
+| `PM_DASHBOARD_STATE_FILE`    | `~/.openclaw/pm-dashboard/state.db`    | SQLite database path |
+| `PM_DASHBOARD_SYNC_ENABLED`  | true                                   | Enable Git sync      |
+| `PM_DASHBOARD_SYNC_INTERVAL` | 30000                                  | Sync interval in ms  |
+| `PM_DASHBOARD_CONFIG_FILE`   | `~/.openclaw/pm-dashboard/config.json` | Custom config path   |
 
 ### 3.4 Path Resolution
 
@@ -175,7 +171,7 @@ const DEFAULT_CONFIG = {
   projectsDir: '~/.openclaw/shared-project',
   stateFile: '~/.openclaw/pm-dashboard/state.db',
   logsDir: '~/.openclaw/pm-dashboard/logs',
-  configFile: '~/.openclaw/pm-dashboard/config.json'
+  configFile: '~/.openclaw/pm-dashboard/config.json',
 };
 
 function resolvePath(p) {
@@ -194,7 +190,7 @@ function getPaths(config = {}) {
     projectsDir: resolvePath(merged.projectsDir),
     stateFile: resolvePath(merged.stateFile),
     logsDir: resolvePath(merged.logsDir),
-    configFile: resolvePath(merged.configFile)
+    configFile: resolvePath(merged.configFile),
   };
 }
 
@@ -208,6 +204,7 @@ module.exports = { resolvePath, getPaths, DEFAULT_CONFIG };
 ### 4.1 SQLite Database Schema
 
 **Why SQLite?**
+
 - Zero configuration
 - Single file = easy migration
 - ACID compliant
@@ -294,12 +291,12 @@ let db = null;
 
 async function initDatabase(config = {}) {
   const dbPath = resolvePath(config.stateFile || '~/.openclaw/pm-dashboard/state.db');
-  
+
   db = await open({
     filename: dbPath,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
-  
+
   await runMigrations(db);
   return db;
 }
@@ -311,9 +308,9 @@ async function runMigrations(db) {
       applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
-  
+
   const version = await db.get('SELECT COALESCE(MAX(version), 0) as v FROM schema_version');
-  
+
   // Migration 1: Initial schema
   if (version.v < 1) {
     await db.exec(`
@@ -332,7 +329,7 @@ async function runMigrations(db) {
       INSERT INTO schema_version (version) VALUES (1);
     `);
   }
-  
+
   // Add more migrations as needed...
 }
 
@@ -369,6 +366,7 @@ module.exports = { initDatabase, getDb };
 #### Method 1: Git-Based State Sync (Recommended)
 
 **State Repository Structure:**
+
 ```
 pm-dashboard-state/
 ├── config.json              # Dashboard configuration
@@ -382,6 +380,7 @@ pm-dashboard-state/
 **Migration Steps:**
 
 1. **On Source Machine:**
+
 ```bash
 # Initialize state repository
 cd ~/.openclaw/pm-dashboard
@@ -395,6 +394,7 @@ git push origin main
 ```
 
 2. **On Target Machine:**
+
 ```bash
 # Clone state
 mkdir -p ~/.openclaw/pm-dashboard
@@ -407,11 +407,13 @@ git clone <your-git-repo> .
 #### Method 2: Export/Import Bundle
 
 **Export Command:**
+
 ```bash
 pm-dashboard export --output dashboard-bundle.tar.gz
 ```
 
 **Bundle Contents:**
+
 ```
 dashboard-bundle.tar.gz
 ├── manifest.json           # Bundle metadata
@@ -421,6 +423,7 @@ dashboard-bundle.tar.gz
 ```
 
 **Import Command:**
+
 ```bash
 pm-dashboard import --input dashboard-bundle.tar.gz
 ```
@@ -453,12 +456,14 @@ For Git-friendliness, project states are also stored as individual JSON files:
 ### 6.1 As OpenClaw Skill (Recommended)
 
 **Benefits:**
+
 - Native integration with OpenClaw ecosystem
 - Auto-starts with OpenClaw
 - Uses OpenClaw's config system
 - No separate process management
 
 **Skill Structure:**
+
 ```
 ~/.openclaw/skills/pm-dashboard/
 ├── SKILL.md              # Skill definition
@@ -478,11 +483,14 @@ For Git-friendliness, project states are also stored as individual JSON files:
 ```
 
 **SKILL.md:**
-```markdown
+
+````markdown
 # PM Dashboard Skill
 
 ## Trigger
+
 Use this skill when asked to:
+
 - View project status
 - Check project progress
 - Open the project dashboard
@@ -491,16 +499,20 @@ Use this skill when asked to:
 ## Commands
 
 ### Start Dashboard
+
 ```bash
 pm-dashboard start [--port 3001]
 ```
+````
 
 ### Check Status
+
 ```bash
 pm-dashboard status
 ```
 
 ### Export State
+
 ```bash
 pm-dashboard export --output <file>
 ```
@@ -510,20 +522,23 @@ pm-dashboard export --output <file>
 Configuration is stored in `~/.openclaw/pm-dashboard/config.json`.
 
 See `docs/PORTABLE_ARCHITECTURE.md` for full configuration options.
+
 ```
 
 ### 6.2 As Standalone npm Package
 
 **Package Structure:**
 ```
+
 openclaw-pm-dashboard/
 ├── package.json
 ├── bin/
-│   └── pm-dashboard      # CLI entry point
-├── lib/                  # Backend code
-├── dist/                 # Built frontend
+│ └── pm-dashboard # CLI entry point
+├── lib/ # Backend code
+├── dist/ # Built frontend
 └── README.md
-```
+
+````
 
 **Installation:**
 ```bash
@@ -534,7 +549,7 @@ pm-dashboard start
 
 # Configure
 pm-dashboard config set projectsDir ~/.openclaw/shared-project
-```
+````
 
 ### 6.3 As Systemd Service (Linux)
 
@@ -559,6 +574,7 @@ WantedBy=multi-user.target
 ```
 
 **Management:**
+
 ```bash
 # Install service
 pm-dashboard install-service
@@ -576,6 +592,7 @@ systemctl --user restart pm-dashboard
 ### 7.1 Git-Based Sync (Primary Method)
 
 **Sync Flow:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      SYNC CYCLE                              │
@@ -600,6 +617,7 @@ systemctl --user restart pm-dashboard
 ```
 
 **Sync Module:**
+
 ```javascript
 // lib/sync.js
 const { execSync } = require('child_process');
@@ -614,21 +632,21 @@ class GitSync {
 
   async sync() {
     const { remote, branch } = this.config.sync;
-    
+
     try {
       // Check git status
       const status = execSync('git status --porcelain', { cwd: this.stateDir }).toString();
-      
+
       // Pull first
       execSync(`git pull ${remote} ${branch}`, { cwd: this.stateDir });
-      
+
       // If local changes, commit and push
       if (status.trim()) {
         execSync('git add .', { cwd: this.stateDir });
         execSync(`git commit -m "Sync: ${new Date().toISOString()}"`, { cwd: this.stateDir });
         execSync(`git push ${remote} ${branch}`, { cwd: this.stateDir });
       }
-      
+
       return { success: true, timestamp: new Date().toISOString() };
     } catch (error) {
       return { success: false, error: error.message };
@@ -649,6 +667,7 @@ module.exports = GitSync;
 ### 7.2 Conflict Resolution Strategy
 
 **Timestamp-Based Resolution:**
+
 - Each project state includes `_metadata.last_modified`
 - On conflict, keep the newer version
 - Log conflicts for manual review
@@ -657,7 +676,7 @@ module.exports = GitSync;
 function resolveConflict(localState, remoteState) {
   const localTime = new Date(localState._metadata.last_modified);
   const remoteTime = new Date(remoteState._metadata.last_modified);
-  
+
   if (localTime > remoteTime) {
     return { resolved: localState, strategy: 'kept_local' };
   } else {
@@ -677,10 +696,10 @@ const { io } = require('socket.io-client');
 class RealTimeSync {
   constructor(gatewayUrl, token) {
     this.socket = io(gatewayUrl, {
-      auth: { token }
+      auth: { token },
     });
-    
-    this.socket.on('project_updated', (data) => {
+
+    this.socket.on('project_updated', data => {
       this.handleRemoteUpdate(data);
     });
   }
@@ -720,6 +739,7 @@ class RealTimeSync {
    - Config file loading
 
 **Files to create:**
+
 ```
 backend/lib/
 ├── database.js
@@ -728,6 +748,7 @@ backend/lib/
 ```
 
 **Files to modify:**
+
 ```
 backend/server.js
 backend/package.json (add sqlite dependency)
@@ -752,12 +773,14 @@ backend/package.json (add sqlite dependency)
    - No hardcoded URLs
 
 **Files to create:**
+
 ```
 bin/pm-dashboard.js
 lib/config.js
 ```
 
 **Files to modify:**
+
 ```
 frontend/src/config/api.js
 ```
@@ -781,6 +804,7 @@ frontend/src/config/api.js
    - Sync on shutdown
 
 **Files to create:**
+
 ```
 lib/sync.js
 lib/git-operations.js
@@ -802,6 +826,7 @@ lib/git-operations.js
    - Configuration reference
 
 **Files to create:**
+
 ```
 ~/.openclaw/skills/pm-dashboard/SKILL.md
 ~/.openclaw/skills/pm-dashboard/package.json
@@ -821,6 +846,7 @@ lib/git-operations.js
    - Troubleshooting
 
 **Files to create:**
+
 ```
 lib/migration.js
 scripts/migrate.sh
@@ -861,8 +887,8 @@ await fetch(`${OPENCLAW_GATEWAY_URL}/api/spawn`, {
   body: JSON.stringify({
     agentId: 'tester',
     message: 'Run tests for ProjectAlpha',
-    context: { projectName: 'ProjectAlpha' }
-  })
+    context: { projectName: 'ProjectAlpha' },
+  }),
 });
 ```
 
@@ -902,13 +928,13 @@ fs.writeFileSync(statePath, JSON.stringify({
 
 ### Key Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| SQLite for persistence | Zero-config, single-file, portable |
-| Git for sync | Existing tooling, version history, conflict resolution |
-| Config in `~/.openclaw/` | Follows OpenClaw conventions |
-| Skill-based deployment | Native integration, auto-start |
-| File-based project states | Agent-friendly, Git-friendly |
+| Decision                  | Rationale                                              |
+| ------------------------- | ------------------------------------------------------ |
+| SQLite for persistence    | Zero-config, single-file, portable                     |
+| Git for sync              | Existing tooling, version history, conflict resolution |
+| Config in `~/.openclaw/`  | Follows OpenClaw conventions                           |
+| Skill-based deployment    | Native integration, auto-start                         |
+| File-based project states | Agent-friendly, Git-friendly                           |
 
 ### Migration Checklist
 
@@ -923,6 +949,7 @@ fs.writeFileSync(statePath, JSON.stringify({
 ### File Changes Summary
 
 **New Files:**
+
 ```
 backend/lib/database.js
 backend/lib/paths.js
@@ -934,6 +961,7 @@ bin/pm-dashboard.js
 ```
 
 **Modified Files:**
+
 ```
 backend/server.js          # Use database instead of Map
 backend/package.json       # Add sqlite, commander deps
@@ -942,5 +970,5 @@ frontend/src/config/api.js # Use env vars
 
 ---
 
-*Document Version: 1.0.0*
-*Last Updated: 2026-03-26*
+_Document Version: 1.0.0_
+_Last Updated: 2026-03-26_

@@ -16,7 +16,8 @@ function getStatusFromProgress(progress) {
  */
 function countCompletedSteps(implementationPlan) {
   if (!implementationPlan || !Array.isArray(implementationPlan)) return 0;
-  return implementationPlan.filter(step => step.status === 'done' || step.status === 'completed').length;
+  return implementationPlan.filter(step => step.status === 'done' || step.status === 'completed')
+    .length;
 }
 
 /**
@@ -25,10 +26,10 @@ function countCompletedSteps(implementationPlan) {
 function projectToSpace(project) {
   const completedSteps = countCompletedSteps(project.implementation_plan);
   const totalSteps = project.implementation_plan?.length || 0;
-  
+
   // Create lists from the project
   const lists = [];
-  
+
   // Main implementation list
   if (totalSteps > 0) {
     lists.push({
@@ -37,10 +38,10 @@ function projectToSpace(project) {
       itemCount: totalSteps,
       completedCount: completedSteps,
       status: getStatusFromProgress(project.progress_percentage),
-      project: project // Reference to original project
+      project: project, // Reference to original project
     });
   }
-  
+
   // Tests list
   const testCount = project.tests_generated?.length || 0;
   if (testCount > 0) {
@@ -51,10 +52,10 @@ function projectToSpace(project) {
       itemCount: testCount,
       completedCount: passedTests,
       status: passedTests === testCount ? 'done' : 'in_progress',
-      project: project
+      project: project,
     });
   }
-  
+
   // Decision tree list
   const decisionCount = project.decision_tree?.length || 0;
   if (decisionCount > 0) {
@@ -65,10 +66,10 @@ function projectToSpace(project) {
       itemCount: decisionCount,
       completedCount: madeDecisions,
       status: madeDecisions === decisionCount ? 'done' : 'in_progress',
-      project: project
+      project: project,
     });
   }
-  
+
   // If no lists, create a default one
   if (lists.length === 0) {
     lists.push({
@@ -77,10 +78,10 @@ function projectToSpace(project) {
       itemCount: 1,
       completedCount: project.progress_percentage >= 100 ? 1 : 0,
       status: getStatusFromProgress(project.progress_percentage),
-      project: project
+      project: project,
     });
   }
-  
+
   return {
     id: `space-${project.project_name}`,
     name: project.project_name,
@@ -88,7 +89,7 @@ function projectToSpace(project) {
     color: 'text-purple-400',
     lists,
     progress: project.progress_percentage,
-    editor: project.editor_used
+    editor: project.editor_used,
   };
 }
 
@@ -104,24 +105,24 @@ export function transformToWorkspace(projects) {
       spaces: [],
       totalProjects: 0,
       activeProjects: 0,
-      completedProjects: 0
+      completedProjects: 0,
     };
   }
-  
+
   // Transform each project into a space
   const spaces = projects.map(projectToSpace);
-  
+
   // Calculate stats
   const totalProjects = projects.length;
   const completedProjects = projects.filter(p => p.progress_percentage >= 100).length;
   const activeProjects = totalProjects - completedProjects;
-  
+
   return {
     name: 'PM Dashboard',
     spaces,
     totalProjects,
     activeProjects,
-    completedProjects
+    completedProjects,
   };
 }
 
@@ -133,11 +134,11 @@ export function transformToWorkspace(projects) {
  */
 export function findProjectByListId(projects, listId) {
   if (!projects || !listId) return null;
-  
+
   // Extract project name from list ID (format: type-projectName)
   const parts = listId.split('-');
   if (parts.length < 2) return null;
-  
+
   const projectName = parts.slice(1).join('-');
   return projects.find(p => p.project_name === projectName) || null;
 }

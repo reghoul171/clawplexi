@@ -8,24 +8,24 @@ const PHASES = [
   { name: 'Testing', threshold: 50 },
   { name: 'Review', threshold: 75 },
   { name: 'Deployment', threshold: 90 },
-  { name: 'Complete', threshold: 100 }
+  { name: 'Complete', threshold: 100 },
 ];
 
 export function calculatePhase(progressPercentage) {
   const progress = Math.max(0, Math.min(100, progressPercentage || 0));
-  
+
   let currentPhase = PHASES[0];
   for (const phase of PHASES) {
     if (progress >= phase.threshold) {
       currentPhase = phase;
     }
   }
-  
+
   return {
     name: currentPhase.name,
     index: PHASES.indexOf(currentPhase),
     total: PHASES.length,
-    progress: progress
+    progress: progress,
   };
 }
 

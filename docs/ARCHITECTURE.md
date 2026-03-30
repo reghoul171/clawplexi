@@ -27,13 +27,13 @@ The PM Dashboard provides a real-time visualization of AI agent project states. 
 
 ### Key Design Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| **SQLite Database** | Zero-configuration, single-file, ACID-compliant, portable |
-| **OpenClaw Integration** | Uses `~/.openclaw/` for config and state storage |
-| **No Hardcoded Paths** | All paths resolved dynamically from config or environment |
-| **Git-Based Sync** | Leverage existing version control for state synchronization |
-| **File Watching** | Auto-detect `.project_state.json` changes in real-time |
+| Decision                 | Rationale                                                   |
+| ------------------------ | ----------------------------------------------------------- |
+| **SQLite Database**      | Zero-configuration, single-file, ACID-compliant, portable   |
+| **OpenClaw Integration** | Uses `~/.openclaw/` for config and state storage            |
+| **No Hardcoded Paths**   | All paths resolved dynamically from config or environment   |
+| **Git-Based Sync**       | Leverage existing version control for state synchronization |
+| **File Watching**        | Auto-detect `.project_state.json` changes in real-time      |
 
 ### Architecture Diagram
 
@@ -90,6 +90,7 @@ The `lib/` directory contains core modules that handle all portable functionalit
 #### `paths.js` - Path Resolution
 
 Centralizes all path resolution with support for:
+
 - `~` expansion to home directory
 - Environment variable overrides
 - Config file values
@@ -182,11 +183,11 @@ Provides Git-based state synchronization for cross-machine portability:
 ```javascript
 // GitSync class - manages the state repository
 const gitSync = new GitSync({ stateDir, config });
-await gitSync.sync();  // Pull, commit, push
+await gitSync.sync(); // Pull, commit, push
 
 // ProjectFileSync class - manages individual JSON files
 const fileSync = new ProjectFileSync(projectsDir);
-fileSync.saveProject(state);  // Write to JSON file
+fileSync.saveProject(state); // Write to JSON file
 ```
 
 **Classes:**
@@ -255,12 +256,7 @@ pm-dashboard init [--remote <git-url>]
     "autoCommit": true
   },
   "watcher": {
-    "ignorePatterns": [
-      "**/node_modules/**",
-      "**/.git/**",
-      "**/dist/**",
-      "**/build/**"
-    ]
+    "ignorePatterns": ["**/node_modules/**", "**/.git/**", "**/dist/**", "**/build/**"]
   },
   "logging": {
     "level": "info",
@@ -274,20 +270,20 @@ pm-dashboard init [--remote <git-url>]
 
 All environment variables use the `PM_DASHBOARD_` prefix:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PM_DASHBOARD_PORT` | `3001` | Backend server port |
-| `PM_DASHBOARD_HOST` | `localhost` | Server bind host |
-| `PM_DASHBOARD_CORS_ORIGINS` | `localhost:5173` | Allowed CORS origins (comma-separated) |
-| `PM_DASHBOARD_FRONTEND_PORT` | `5173` | Frontend dev server port |
-| `PM_DASHBOARD_API_URL` | `http://localhost:3001` | API URL for frontend |
-| `PM_DASHBOARD_PROJECTS_DIR` | `~/.openclaw/shared-project` | Projects directory |
-| `PM_DASHBOARD_STATE_FILE` | `~/.openclaw/pm-dashboard/state.db` | SQLite database path |
-| `PM_DASHBOARD_LOGS_DIR` | `~/.openclaw/pm-dashboard/logs` | Logs directory |
-| `PM_DASHBOARD_SYNC_ENABLED` | `true` | Enable Git sync |
-| `PM_DASHBOARD_SYNC_INTERVAL` | `30000` | Sync interval in milliseconds |
-| `PM_DASHBOARD_LOG_LEVEL` | `info` | Logging level (debug/info/warn/error) |
-| `PM_DASHBOARD_CONFIG_FILE` | `~/.openclaw/pm-dashboard/config.json` | Custom config file path |
+| Variable                     | Default                                | Description                            |
+| ---------------------------- | -------------------------------------- | -------------------------------------- |
+| `PM_DASHBOARD_PORT`          | `3001`                                 | Backend server port                    |
+| `PM_DASHBOARD_HOST`          | `localhost`                            | Server bind host                       |
+| `PM_DASHBOARD_CORS_ORIGINS`  | `localhost:5173`                       | Allowed CORS origins (comma-separated) |
+| `PM_DASHBOARD_FRONTEND_PORT` | `5173`                                 | Frontend dev server port               |
+| `PM_DASHBOARD_API_URL`       | `http://localhost:3001`                | API URL for frontend                   |
+| `PM_DASHBOARD_PROJECTS_DIR`  | `~/.openclaw/shared-project`           | Projects directory                     |
+| `PM_DASHBOARD_STATE_FILE`    | `~/.openclaw/pm-dashboard/state.db`    | SQLite database path                   |
+| `PM_DASHBOARD_LOGS_DIR`      | `~/.openclaw/pm-dashboard/logs`        | Logs directory                         |
+| `PM_DASHBOARD_SYNC_ENABLED`  | `true`                                 | Enable Git sync                        |
+| `PM_DASHBOARD_SYNC_INTERVAL` | `30000`                                | Sync interval in milliseconds          |
+| `PM_DASHBOARD_LOG_LEVEL`     | `info`                                 | Logging level (debug/info/warn/error)  |
+| `PM_DASHBOARD_CONFIG_FILE`   | `~/.openclaw/pm-dashboard/config.json` | Custom config file path                |
 
 ### Frontend Environment
 
@@ -299,6 +295,7 @@ VITE_API_URL=http://localhost:3001
 ```
 
 Accessed in code:
+
 ```javascript
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 ```
@@ -321,18 +318,18 @@ const DEFAULT_CONFIG = {
   server: {
     port: 3001,
     host: 'localhost',
-    corsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173']
+    corsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173'],
   },
   frontend: {
     port: 5173,
-    apiUrl: 'http://localhost:3001'
+    apiUrl: 'http://localhost:3001',
   },
   paths: {
     projectsDir: '~/.openclaw/shared-project',
     stateFile: '~/.openclaw/pm-dashboard/state.db',
     logsDir: '~/.openclaw/pm-dashboard/logs',
     configFile: '~/.openclaw/pm-dashboard/config.json',
-    projectsStateDir: '~/.openclaw/pm-dashboard/projects'
+    projectsStateDir: '~/.openclaw/pm-dashboard/projects',
   },
   sync: {
     enabled: true,
@@ -340,7 +337,7 @@ const DEFAULT_CONFIG = {
     intervalMs: 30000,
     remote: 'origin',
     branch: 'main',
-    autoCommit: true
+    autoCommit: true,
   },
   watcher: {
     ignorePatterns: [
@@ -348,14 +345,14 @@ const DEFAULT_CONFIG = {
       '**/.git/**',
       '**/dist/**',
       '**/build/**',
-      '**/.DS_Store'
-    ]
+      '**/.DS_Store',
+    ],
   },
   logging: {
     level: 'info',
     console: true,
-    file: true
-  }
+    file: true,
+  },
 };
 ```
 
@@ -366,6 +363,7 @@ const DEFAULT_CONFIG = {
 ### Location
 
 The SQLite database is stored at:
+
 ```
 ~/.openclaw/pm-dashboard/state.db
 ```
@@ -402,17 +400,17 @@ CREATE TABLE projects (
 );
 ```
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INTEGER | Auto-increment primary key |
-| `name` | TEXT | Unique project identifier |
-| `path` | TEXT | Path to project directory |
-| `state_json` | TEXT | Full state as JSON string |
-| `progress_percentage` | INTEGER | Progress 0-100 |
-| `editor_used` | TEXT | Editor badge to display |
-| `last_modified` | DATETIME | Last update timestamp |
-| `created_at` | DATETIME | Creation timestamp |
-| `is_active` | BOOLEAN | Soft delete flag |
+| Column                | Type     | Description                |
+| --------------------- | -------- | -------------------------- |
+| `id`                  | INTEGER  | Auto-increment primary key |
+| `name`                | TEXT     | Unique project identifier  |
+| `path`                | TEXT     | Path to project directory  |
+| `state_json`          | TEXT     | Full state as JSON string  |
+| `progress_percentage` | INTEGER  | Progress 0-100             |
+| `editor_used`         | TEXT     | Editor badge to display    |
+| `last_modified`       | DATETIME | Last update timestamp      |
+| `created_at`          | DATETIME | Creation timestamp         |
+| `is_active`           | BOOLEAN  | Soft delete flag           |
 
 #### `implementation_steps`
 
@@ -511,6 +509,7 @@ Options:
 ```
 
 **Examples:**
+
 ```bash
 # Start on default port
 pm-dashboard start
@@ -537,6 +536,7 @@ pm-dashboard status
 ```
 
 Displays:
+
 - Configuration file location
 - Server status (running/stopped)
 - Path configurations
@@ -558,6 +558,7 @@ Actions:
 ```
 
 **Examples:**
+
 ```bash
 # Get server port
 pm-dashboard config get server.port
@@ -586,6 +587,7 @@ Options:
 ```
 
 **Examples:**
+
 ```bash
 # Export to default file
 pm-dashboard export
@@ -595,6 +597,7 @@ pm-dashboard export -o backup-$(date +%Y%m%d).json
 ```
 
 **Export Format:**
+
 ```json
 {
   "version": "1.0.0",
@@ -623,6 +626,7 @@ Options:
 ```
 
 **Examples:**
+
 ```bash
 # Replace existing data with import
 pm-dashboard import backup.json
@@ -645,6 +649,7 @@ Options:
 ```
 
 **Examples:**
+
 ```bash
 # Basic initialization
 pm-dashboard init
@@ -664,6 +669,7 @@ Actions:
 ```
 
 **Examples:**
+
 ```bash
 # Check if ready for migration
 pm-dashboard migrate check
@@ -687,6 +693,7 @@ pm-dashboard -h
 ### Overview
 
 Migration between machines involves transferring:
+
 1. **Database state** (`state.db`) - Project data and sync metadata
 2. **Configuration** (`config.json`) - User preferences
 3. **Project references** - Paths to project directories
@@ -753,12 +760,12 @@ pm-dashboard start
 
 ### What Gets Transferred
 
-| Component | Git Sync | Export/Import |
-|-----------|----------|---------------|
-| Project states (database) | ✅ | ✅ |
-| Configuration | ✅ | ✅ |
-| Sync metadata | ✅ | ✅ |
-| Project files | ❌ (separate) | ❌ (separate) |
+| Component                 | Git Sync      | Export/Import |
+| ------------------------- | ------------- | ------------- |
+| Project states (database) | ✅            | ✅            |
+| Configuration             | ✅            | ✅            |
+| Sync metadata             | ✅            | ✅            |
+| Project files             | ❌ (separate) | ❌ (separate) |
 
 **Note:** The actual project files (code, `.project_state.json`) are not transferred. These should be managed separately (e.g., via your project's own Git repository).
 
@@ -928,17 +935,17 @@ const SCHEMA = {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL
     )
-  `
+  `,
 };
 
 // Add migration
 const MIGRATIONS = [
   // ... existing migrations
   {
-    version: 3,  // Increment version
+    version: 3, // Increment version
     description: 'Add new_table',
-    statements: [SCHEMA.new_table]
-  }
+    statements: [SCHEMA.new_table],
+  },
 ];
 ```
 
@@ -968,14 +975,14 @@ Edit `backend/lib/config.js`:
 const DEFAULT_CONFIG = {
   // ... existing config
   newSection: {
-    newOption: 'default-value'
-  }
+    newOption: 'default-value',
+  },
 };
 
 // Add environment mapping if needed
 const ENV_MAPPINGS = {
   // ... existing mappings
-  'PM_DASHBOARD_NEW_OPTION': { path: 'newSection.newOption', type: 'string' }
+  PM_DASHBOARD_NEW_OPTION: { path: 'newSection.newOption', type: 'string' },
 };
 ```
 
@@ -1007,6 +1014,7 @@ pm-dashboard config set logging.level debug
 ```
 
 Check logs:
+
 ```bash
 # View logs directory
 ls ~/.openclaw/pm-dashboard/logs/
@@ -1025,5 +1033,5 @@ tail -f ~/.openclaw/pm-dashboard/logs/server.log
 
 ---
 
-*Document Version: 1.0.0*  
-*Last Updated: 2026-03-26*
+_Document Version: 1.0.0_  
+_Last Updated: 2026-03-26_
