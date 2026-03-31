@@ -7,8 +7,11 @@ import { API_URL } from '../../../config/api';
  *
  * Design: REST API is the PRIMARY transport for updates (more reliable through tunnels/proxies).
  * Socket.io is used ONLY for receiving real-time updates from the server.
+ * 
+ * @param {Object} project - Current project data
+ * @param {Function} onProjectUpdate - Callback to update parent project state (optional)
  */
-export function useStepDrag(project) {
+export function useStepDrag(project, onProjectUpdate) {
   const [optimisticSteps, setOptimisticSteps] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
@@ -119,11 +122,16 @@ export function useStepDrag(project) {
         })
         .then(data => {
           console.log('[useStepDrag] REST update successful');
-          // Server will broadcast update via socket, but we can clear optimistic state now
-          setOptimisticSteps(null);
           setIsUpdating(false);
           isUpdatingRef.current = false;
           pendingUpdateRef.current = null;
+          
+          // Update parent state with server response (works even if WebSocket fails)
+          if (onProjectUpdate && data.project) {
+            onProjectUpdate(data.project);
+          }
+          // Clear optimistic state after parent is updated
+          setOptimisticSteps(null);
         })
         .catch(err => {
           console.error('[useStepDrag] REST update failed:', err);
@@ -134,7 +142,7 @@ export function useStepDrag(project) {
           pendingUpdateRef.current = null;
         });
     },
-    [project, optimisticSteps]
+    [project, optimisticSteps, onProjectUpdate]
   );
 
   /**
@@ -193,10 +201,15 @@ export function useStepDrag(project) {
         })
         .then(data => {
           console.log('[useStepDrag] Quick status update successful');
-          setOptimisticSteps(null);
           setIsUpdating(false);
           isUpdatingRef.current = false;
           pendingUpdateRef.current = null;
+          
+          // Update parent state with server response
+          if (onProjectUpdate && data.project) {
+            onProjectUpdate(data.project);
+          }
+          setOptimisticSteps(null);
         })
         .catch(err => {
           console.error('[useStepDrag] Quick status update failed:', err);
@@ -207,7 +220,7 @@ export function useStepDrag(project) {
           pendingUpdateRef.current = null;
         });
     },
-    [project, optimisticSteps]
+    [project, optimisticSteps, onProjectUpdate]
   );
 
   /**

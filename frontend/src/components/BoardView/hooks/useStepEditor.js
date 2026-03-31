@@ -3,12 +3,12 @@ import { io } from 'socket.io-client';
 import { API_URL } from '../../../config/api';
 
 /**
- * Custom hook for handling step editing with WebSocket sync
+ * Custom hook for handling step editing with REST API (primary) + WebSocket for real-time sync
  * @param {Object} project - Current project data
- * @param {Function} onUpdate - Optional callback after successful update
+ * @param {Function} onProjectUpdate - Callback to update parent project state
  * @returns {Object} - Editor state and handlers
  */
-export function useStepEditor(project, onUpdate) {
+export function useStepEditor(project, onProjectUpdate) {
   const [editingStep, setEditingStep] = useState(null);
   const [editForm, setEditForm] = useState({ task: '', status: '', notes: '' });
   const [isSaving, setIsSaving] = useState(false);
@@ -16,9 +16,11 @@ export function useStepEditor(project, onUpdate) {
 
   const socketRef = useRef(null);
 
-  // Initialize socket connection
+  // Initialize socket for receiving updates only
   useEffect(() => {
-    socketRef.current = io(API_URL);
+    socketRef.current = io(API_URL, {
+      transports: ['websocket', 'polling'],
+    });
 
     socketRef.current.on('step_update_error', data => {
       console.error('[useStepEditor] Update failed:', data.error);
@@ -26,9 +28,13 @@ export function useStepEditor(project, onUpdate) {
       setIsSaving(false);
     });
 
-    socketRef.current.on('step_updated', data => {
-      if (data.projectName === project?.project_name) {
-        console.log('[useStepEditor] Server confirmed update');
+    // Listen for project updates (broadcast to all clients after any change)
+    socketRef.current.on('project_updated', updatedProject => {
+      if (updatedProject.project_name === project?.project_name) {
+        console.log('[useStepEditor] Received project update from server');
+        // Close modal and reset state
+        setEditingStep(null);
+        setEditForm({ task: '', status: '', notes: '' });
         setIsSaving(false);
       }
     });
@@ -62,42 +68,40 @@ export function useStepEditor(project, onUpdate) {
     setIsSaving(true);
     setError(null);
 
-    // Emit WebSocket event
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('step_update', {
-        projectName: project.project_name,
-        stepId: editingStep,
-        updates: editForm,
-      });
-    } else {
-      // Fallback to REST API
-      try {
-        const response = await fetch(
-          `${API_URL}/api/projects/${encodeURIComponent(project.project_name)}/steps/${editingStep}/status`,
-          {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(editForm),
-          }
-        );
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to update step');
+    // Use REST API as primary transport (reliable through tunnels)
+    try {
+      const response = await fetch(
+        `${API_URL}/api/projects/${encodeURIComponent(project.project_name)}/steps/${editingStep}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editForm),
         }
+      );
 
-        setIsSaving(false);
-      } catch (err) {
-        console.error('[useStepEditor] REST update failed:', err);
-        setError(err.message);
-        setIsSaving(false);
-        return;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update step');
       }
-    }
 
-    if (onUpdate) onUpdate(editingStep, editForm);
-    cancelEdit();
-  }, [editingStep, editForm, project, onUpdate, cancelEdit]);
+      const result = await response.json();
+      console.log('[useStepEditor] REST update successful:', result);
+
+      // Update parent state with server response (works even if WebSocket fails)
+      if (onProjectUpdate && result.project) {
+        onProjectUpdate(result.project);
+      }
+
+      // Close modal after successful save
+      setEditingStep(null);
+      setEditForm({ task: '', status: '', notes: '' });
+      setIsSaving(false);
+    } catch (err) {
+      console.error('[useStepEditor] REST update failed:', err);
+      setError(err.message);
+      setIsSaving(false);
+    }
+  }, [editingStep, editForm, project, onProjectUpdate]);
 
   return {
     editingStep,

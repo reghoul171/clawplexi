@@ -17,12 +17,14 @@ import { TaskCardEditor } from './TaskCardEditor';
 
 /**
  * BoardView - Interactive Kanban board with drag & drop
+ * @param {Object} project - Current project data
+ * @param {Function} onProjectUpdate - Callback to update parent project state
  */
-function BoardView({ project }) {
+function BoardView({ project, onProjectUpdate }) {
   const [activeId, setActiveId] = useState(null);
 
   const { steps, handleDragEnd, handleStatusChange, isUpdating, error, clearError } =
-    useStepDrag(project);
+    useStepDrag(project, onProjectUpdate);
 
   // Step editor hook
   const {
@@ -34,7 +36,7 @@ function BoardView({ project }) {
     saveEdit,
     isSaving,
     error: editError,
-  } = useStepEditor(project);
+  } = useStepEditor(project, onProjectUpdate);
 
   // Configure sensors for drag detection
   const sensors = useSensors(

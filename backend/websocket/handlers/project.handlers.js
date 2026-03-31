@@ -7,7 +7,7 @@
 
 const path = require('path');
 const projectService = require('../../services/project.service');
-const { updateStepStatus } = require('../../lib/projectState');
+const { updateStepStatus, updateStep } = require('../../lib/projectState');
 const projectRepository = require('../../repositories/project.repository');
 
 /**
@@ -63,6 +63,63 @@ function register(io, socket, paths) {
         stepId,
         error: error.message,
         previousStatus,
+      });
+    }
+  });
+
+  /**
+   * Handle step update via WebSocket (general update)
+   */
+  socket.on('step_update', async data => {
+    const { projectName, stepId, updates, previousStep } = data;
+
+    console.log(`[Socket] Step update: ${projectName} step ${stepId}`);
+
+    try {
+      // Get project from database
+      const project = await projectRepository.findByName(projectName);
+
+      if (!project) {
+        return socket.emit('step_update_error', {
+          projectName,
+          stepId,
+          error: 'Project not found',
+          previousStep,
+        });
+      }
+
+      // Use project path if available, otherwise construct it
+      const projectPath = project._db?.path || path.join(paths.projectsDir, projectName);
+
+      // Update step in file
+      const result = await updateStep(projectPath, stepId, updates);
+
+      // Update database
+      const updatedProject = {
+        ...project,
+        implementation_plan: result.updatedPlan,
+      };
+      await projectRepository.upsert(updatedProject, projectPath);
+
+      // Broadcast to ALL clients (including sender)
+      io.emit('project_updated', updatedProject);
+
+      // Emit step_updated confirmation to sender
+      socket.emit('step_updated', {
+        projectName,
+        stepId,
+        updatedStep: result.updatedStep,
+      });
+
+      console.log(`[Socket] Step ${stepId} updated in ${projectName}`);
+    } catch (error) {
+      console.error('[Socket] Step update error:', error);
+
+      socket.emit('step_update_error', {
+        projectName,
+        stepId,
+        error: error.message,
+        previousStep,
       });
     }
   });

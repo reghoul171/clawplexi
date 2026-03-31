@@ -194,7 +194,7 @@ function App() {
       case 'list':
         return <ListView project={activeProject} />;
       case 'board':
-        return <BoardView project={activeProject} />;
+        return <BoardView project={activeProject} onProjectUpdate={setActiveProject} />;
       case 'timeline':
         return <TimelineView project={activeProject} />;
       case 'tests':

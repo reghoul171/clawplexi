@@ -418,20 +418,113 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full CLI reference.
 
 ### Architecture
 
+The backend follows a clean **Service Layer Architecture** with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          HTTP Request                            │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Routes (API Endpoints)                       │
+│              routes/projects.routes.js, etc.                     │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Controllers (HTTP Handlers)                   │
+│           controllers/projects.controller.js, etc.               │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Services (Business Logic)                   │
+│           services/project.service.js, sync.service.js           │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   Repositories (Data Access)                     │
+│          repositories/project.repository.js, etc.                │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     SQLite Database                              │
+│              lib/database/ (modular) + state.db                  │
+│  ┌─────────────┬─────────────┬─────────────┬─────────────────┐  │
+│  │ connection  │   schema    │  repository │   statistics    │  │
+│  │ lifecycle   │  migrations │   CRUD ops  │  export/import  │  │
+│  └─────────────┴─────────────┴─────────────┴─────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Directory Structure
+
 ```
 openclaw-pm-dashboard/
-├── backend/                 # Node.js + Express + Socket.io server
-│   ├── server.js           # Main server with chokidar file watcher
-│   └── package.json
-├── frontend/               # React + Vite + Tailwind dashboard
+├── backend/                     # Node.js + Express + Socket.io server
+│   ├── server.js               # Entry point (initialization, shutdown)
+│   ├── app.js                  # Express application factory
+│   ├── routes/                 # API route definitions
+│   │   ├── index.js           # Route aggregator
+│   │   ├── projects.routes.js # Project endpoints
+│   │   ├── sync.routes.js     # Sync endpoints
+│   │   └── tasks.routes.js    # Task endpoints
+│   ├── controllers/            # HTTP request handlers
+│   │   ├── projects.controller.js
+│   │   ├── sync.controller.js
+│   │   └── tasks.controller.js
+│   ├── services/               # Business logic layer
+│   │   ├── project.service.js
+│   │   ├── sync.service.js
+│   │   ├── task.service.js
+│   │   ├── fileWatcher.service.js
+│   │   └── tester.service.js
+│   ├── repositories/           # Data access layer
+│   │   ├── project.repository.js
+│   │   ├── sync.repository.js
+│   │   └── task.repository.js
+│   ├── middleware/             # Express middleware
+│   │   ├── error.middleware.js
+│   │   ├── cors.middleware.js
+│   │   └── logging.middleware.js
+│   ├── websocket/              # Socket.io handlers
+│   │   ├── index.js
+│   │   └── handlers/
+│   ├── lib/                    # Core libraries
+│   │   ├── config.js          # Configuration management
+│   │   ├── database.js        # SQLite persistence (entry point)
+│   │   ├── database/          # Modular database components
+│   │   │   ├── index.js       # Main exports (backward compatible)
+│   │   │   ├── connection.js  # DB lifecycle & migrations
+│   │   │   ├── schema.js      # Table definitions & indexes
+│   │   │   ├── repository/    # Data access layer
+│   │   │   │   ├── projects.js # Project CRUD
+│   │   │   │   ├── tasks.js   # Task operations
+│   │   │   │   └── sync.js    # Sync state
+│   │   │   ├── utils/         # Query utilities
+│   │   │   │   └── query.js   # Promise wrappers
+│   │   │   └── statistics.js  # Stats & export/import
+│   │   ├── paths.js           # Path resolution
+│   │   └── sync.js            # Git synchronization
+│   ├── bin/                    # CLI tools
+│   │   └── pm-dashboard.js
+│   └── __tests__/              # Test suites
+├── frontend/                   # React + Vite + Tailwind dashboard
 │   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── App.jsx        # Main app with WebSocket integration
+│   │   ├── components/         # React components
+│   │   ├── App.jsx            # Main app with WebSocket integration
 │   │   └── main.jsx
 │   └── package.json
-├── mock_workspace/         # Sample project data
+├── mock_workspace/             # Sample project data
 │   └── ProjectAlpha/
 │       └── .project_state.json
+├── docs/                       # Documentation
+│   ├── ARCHITECTURE.md        # Detailed architecture guide
+│   ├── PORTABLE_ARCHITECTURE.md
+│   └── IMPLEMENTATION_GUIDE.md
 ├── docker-compose.yml
 └── .env
 ```
@@ -709,6 +802,119 @@ Valid statuses: `pending`, `in_progress`, `done`
 | `project_updated` | Server → Client | Emitted when a project file changes          |
 | `project_removed` | Server → Client | Emitted when a project file is deleted       |
 
+## Testing
+
+The project includes comprehensive test coverage using modern testing tools.
+
+### Test Stack
+
+| Layer      | Tools                                                    |
+| ---------- | -------------------------------------------------------- |
+| Backend    | Vitest + Supertest (API integration tests)               |
+| Frontend   | Vitest + React Testing Library + @testing-library/jest-dom |
+| Coverage   | v8 coverage provider                                      |
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run backend tests only
+npm run test:backend
+
+# Run frontend tests only
+npm run test:frontend
+
+# Run with coverage
+npm run test:coverage
+
+# Run backend coverage
+npm run test:coverage:backend
+
+# Run frontend coverage
+npm run test:coverage:frontend
+```
+
+### Test Statistics
+
+| Metric          | Backend | Frontend |
+| --------------- | ------- | -------- |
+| Tests           | 131     | 97       |
+| Coverage        | 44.68%  | 24.06%   |
+| Target Coverage | 70%     | 70%      |
+
+### Test Structure
+
+```
+backend/
+└── __tests__/
+    ├── setup.js           # Test environment setup
+    ├── fixtures/          # Test data fixtures
+    ├── helpers/           # Test utilities
+    ├── unit/              # Unit tests
+    │   ├── config.test.js
+    │   ├── database.test.js
+    │   ├── middleware.test.js
+    │   ├── services/
+    │   └── ...
+    └── integration/       # Integration tests
+        └── api.test.js
+
+frontend/
+└── src/
+    └── __tests__/
+        ├── setup.js               # Test environment setup
+        ├── components/            # Component tests
+        │   ├── Sidebar.test.jsx
+        │   ├── Overview.test.jsx
+        │   └── ...
+        ├── hooks/                 # Hook tests
+        ├── utils/                 # Utility tests
+        └── config/                # Config tests
+```
+
+### Coverage Reports
+
+After running `npm run test:coverage`, view detailed reports:
+
+- **HTML Report**: Open `backend/coverage/index.html` or `frontend/coverage/index.html`
+- **JSON Report**: `coverage/coverage-final.json`
+- **Console Summary**: Printed to terminal
+
+### See Also
+
+For detailed testing documentation, see [TESTING.md](TESTING.md).
+
+## Code Quality
+
+### Linting & Formatting
+
+The project uses ESLint and Prettier for code quality:
+
+```bash
+# Lint all code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Check formatting
+npm run format:check
+
+# Format all code
+npm run format
+```
+
+### Pre-commit Hooks
+
+Husky + lint-staged automatically runs on every commit:
+
+- **ESLint**: Checks staged `.js` and `.jsx` files
+- **Prettier**: Formats staged files
+
+This ensures consistent code quality without manual intervention.
+
 ## Development
 
 ### Adding a New Project
@@ -786,6 +992,7 @@ In development mode, `corsAllowAllInDev: true` allows all origins. Set `NODE_ENV
 ## Documentation
 
 - **[Architecture Guide](docs/ARCHITECTURE.md)** - Comprehensive documentation of the portable architecture, configuration, database schema, CLI reference, and migration guide
+- **[Database Module API](docs/DATABASE_MODULE.md)** - Detailed API reference for the modular database layer
 - **[Portable Architecture Design](docs/PORTABLE_ARCHITECTURE.md)** - Design decisions and detailed architecture specification
 - **[Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)** - Step-by-step implementation walkthrough
 
@@ -794,6 +1001,44 @@ In development mode, `corsAllowAllInDev: true` allows all origins. Set `NODE_ENV
 MIT
 
 ## Changelog
+
+### v1.2.0 (2026-03-31)
+
+#### Phase 3b - Database Module Refactoring
+
+- Split monolithic `lib/database.js` into modular `lib/database/` directory structure
+- Created `connection.js` for database lifecycle management (init, close, migrations)
+- Created `schema.js` for SQL schema definitions and migration management
+- Created `repository/` subdirectory with dedicated data access modules:
+  - `projects.js` - Project CRUD operations
+  - `tasks.js` - Task management operations
+  - `sync.js` - Sync state tracking
+- Created `utils/query.js` for promise-wrapped SQLite operations
+- Created `statistics.js` for statistics, export, and import operations
+- Added backward-compatible wrapper at `lib/database.js` for seamless migration
+- Updated README.md and ARCHITECTURE.md with new module structure
+- Added `docs/DATABASE_MODULE.md` with complete API reference
+
+### v1.1.0 (2026-03-31)
+
+#### Phase 1 - Code Quality Tooling
+
+- Added ESLint configuration (`.eslintrc.json`) with ES2022 support
+- Added Prettier configuration (`.prettierrc`, `.prettierignore`)
+- Implemented Husky pre-commit hooks for automated quality checks
+- Configured lint-staged for staged file linting and formatting
+- Added npm scripts: `lint`, `lint:fix`, `format`, `format:check`
+
+#### Phase 2 - Test Infrastructure
+
+- Integrated Vitest as the primary test framework
+- Added React Testing Library for frontend component tests
+- Added Supertest for backend API integration tests
+- Created 228 total tests (131 backend, 97 frontend)
+- Achieved initial coverage: Backend 44.68%, Frontend 24.06%
+- Created comprehensive test structure with unit and integration tests
+- Bug fix: Overview.jsx now handles null project data gracefully
+- Added `TESTING.md` documentation
 
 ### v1.0.1 (2026-03-28)
 

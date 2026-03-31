@@ -83,6 +83,47 @@ async function updateStepStatus(req, res, next) {
 }
 
 /**
+ * Update a step (general update)
+ * PATCH /api/projects/:name/steps/:stepNumber
+ */
+async function updateStep(req, res, next) {
+  try {
+    const { name, stepNumber } = req.params;
+    const updates = req.body;
+    const paths = req.app.locals.paths;
+
+    const result = await projectService.updateStepByName(name, stepNumber, updates, paths);
+
+    // Broadcast via WebSocket
+    const io = req.app.locals.io;
+    if (io) {
+      io.emit('project_updated', result.project);
+    }
+
+    console.log(`[ProjectsController] Step ${stepNumber} updated in ${name}`);
+    res.json(result);
+  } catch (error) {
+    console.error('[ProjectsController] Error updating step:', error);
+
+    // Handle specific errors
+    if (error.message === 'Project name cannot be empty') {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error.message === 'Project not found') {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message.startsWith('Step')) {
+      return res.status(404).json({ error: error.message });
+    }
+    if (error.message.startsWith('Invalid status')) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    next(error);
+  }
+}
+
+/**
  * Get dashboard statistics
  * GET /api/stats
  */
@@ -126,6 +167,7 @@ module.exports = {
   list,
   getByName,
   updateStepStatus,
+  updateStep,
   getStats,
   healthCheck,
 };

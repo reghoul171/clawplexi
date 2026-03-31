@@ -29,4 +29,9 @@ router.patch('/:name/steps/:stepNumber/status', projectsController.updateStepSta
  */
 router.put('/:name/steps/:stepNumber/status', projectsController.updateStepStatus);
 
+/**
+ * PATCH /api/projects/:name/steps/:stepNumber - Update step (general update)
+ */
+router.patch('/:name/steps/:stepNumber', projectsController.updateStep);
+
 module.exports = router;

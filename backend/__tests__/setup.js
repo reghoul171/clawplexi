@@ -14,8 +14,14 @@ beforeAll(async () => {
   process.env.NODE_ENV = 'test';
   process.env.PM_DASHBOARD_PORT = '3002'; // Use different port for tests
   process.env.PM_DASHBOARD_STATE_FILE = ':memory:'; // In-memory SQLite for tests
+  
+  // Initialize the database for tests that need it
+  const db = await import('../lib/database.js');
+  await db.initDatabase(':memory:');
 });
 
 afterAll(async () => {
-  // Cleanup
+  // Cleanup database
+  const db = await import('../lib/database.js');
+  await db.closeDatabase();
 });

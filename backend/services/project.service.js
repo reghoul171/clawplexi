@@ -7,7 +7,7 @@
 
 const path = require('path');
 const projectRepository = require('../repositories/project.repository');
-const { updateProjectState, updateStepStatus } = require('../lib/projectState');
+const { updateProjectState, updateStepStatus, updateStep } = require('../lib/projectState');
 
 /**
  * Get all projects
@@ -95,6 +95,75 @@ async function updateStepStatusByName(projectName, stepNumber, status, paths) {
 }
 
 /**
+ * Update a step (general update)
+ * @param {string} projectName - Project name
+ * @param {string|number} stepNumber - Step number
+ * @param {Object} updates - Fields to update (task, status, etc.)
+ * @param {Object} paths - Resolved paths object
+ * @returns {Promise<Object>} Update result
+ */
+async function updateStepByName(projectName, stepNumber, updates, paths) {
+  // Validate project name
+  if (!projectName || projectName.trim() === '') {
+    throw new Error('Project name cannot be empty');
+  }
+
+  // Validate status if provided
+  if (updates.status !== undefined) {
+    const validStatuses = ['pending', 'in_progress', 'done'];
+    if (!validStatuses.includes(updates.status)) {
+      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+    }
+  }
+
+  // Get project
+  const project = await projectRepository.findByName(projectName);
+  if (!project) {
+    throw new Error('Project not found');
+  }
+
+  // Find step in implementation plan
+  const stepExists = project.implementation_plan?.some(s => String(s.step) === String(stepNumber));
+
+  if (!stepExists) {
+    throw new Error(`Step ${stepNumber} not found`);
+  }
+
+  // Get project path
+  const projectPath = project._db?.path || path.join(paths.projectsDir, projectName);
+
+  // Update step in file
+  let result;
+  try {
+    result = await updateStep(projectPath, stepNumber, updates);
+  } catch (fileError) {
+    console.warn('[ProjectService] Could not update project file:', fileError.message);
+    // Continue with database update only
+    const previousStep = project.implementation_plan.find(s => String(s.step) === String(stepNumber));
+    const updatedStep = { ...previousStep, ...updates, step: previousStep.step };
+    result = {
+      updatedPlan: project.implementation_plan.map(step =>
+        String(step.step) === String(stepNumber) ? updatedStep : step
+      ),
+      previousStep,
+      updatedStep,
+      stepId: stepNumber,
+    };
+  }
+
+  // Update database
+  const updatedProject = { ...project, implementation_plan: result.updatedPlan };
+  await projectRepository.upsert(updatedProject, projectPath);
+
+  return {
+    success: true,
+    previousStep: result.previousStep,
+    updatedStep: result.updatedStep,
+    project: updatedProject,
+  };
+}
+
+/**
  * Get dashboard statistics
  * @returns {Promise<Object>} Statistics
  */
@@ -125,6 +194,7 @@ module.exports = {
   getAllProjects,
   getProjectByName,
   updateStepStatusByName,
+  updateStepByName,
   getStatistics,
   upsertProject,
   deleteProject,

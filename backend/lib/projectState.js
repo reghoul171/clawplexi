@@ -90,8 +90,51 @@ async function updateStepStatus(projectPath, stepId, newStatus) {
   };
 }
 
+/**
+ * Update a step in implementation plan (general update)
+ * @param {string} projectPath - Path to project directory
+ * @param {string|number} stepId - Step identifier
+ * @param {Object} updates - Fields to update (task, status, etc.)
+ * @returns {Promise<Object>} - Updated step and plan metadata
+ */
+async function updateStep(projectPath, stepId, updates) {
+  const state = await readProjectState(projectPath);
+  if (!state) {
+    throw new Error('Project state not found');
+  }
+
+  if (!state.implementation_plan || !Array.isArray(state.implementation_plan)) {
+    throw new Error('Implementation plan not found in project state');
+  }
+
+  const stepIndex = state.implementation_plan.findIndex(s => String(s.step) === String(stepId));
+
+  if (stepIndex === -1) {
+    throw new Error(`Step ${stepId} not found`);
+  }
+
+  const previousStep = { ...state.implementation_plan[stepIndex] };
+
+  // Merge updates into the step (preserve step number)
+  const updatedStep = { ...previousStep, ...updates, step: previousStep.step };
+
+  const updatedPlan = state.implementation_plan.map(step =>
+    String(step.step) === String(stepId) ? updatedStep : step
+  );
+
+  await updateProjectState(projectPath, { implementation_plan: updatedPlan });
+
+  return {
+    updatedPlan,
+    previousStep,
+    updatedStep,
+    stepId,
+  };
+}
+
 module.exports = {
   readProjectState,
   updateProjectState,
   updateStepStatus,
+  updateStep,
 };

@@ -15,16 +15,21 @@ import {
  */
 
 function Overview({ project }) {
-  // Normalize project data with defaults
+  // Normalize project data with defaults (returns null if project is null/undefined)
   const normalizedProject = useMemo(() => normalizeProject(project), [project]);
 
-  // Derive stats from implementation plan
+  // Derive stats from implementation plan - use safe defaults if no project
   const completedSteps = useMemo(() => {
+    if (!normalizedProject) return 0;
     return normalizedProject.implementation_plan.filter(s => s.status === 'done').length;
-  }, [normalizedProject.implementation_plan]);
+  }, [normalizedProject]);
 
-  const totalSteps = normalizedProject.implementation_plan.length;
+  const totalSteps = useMemo(() => {
+    if (!normalizedProject) return 0;
+    return normalizedProject.implementation_plan.length;
+  }, [normalizedProject]);
 
+  // Early return after all hooks are called (follows React hooks rules)
   if (!normalizedProject) {
     return <div className="text-center text-gray-400 py-12">No project data available</div>;
   }
