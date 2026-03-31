@@ -6,5 +6,6 @@ export { default as useStepDrag } from './hooks/useStepDrag';
 export { useStepEditor } from './hooks/useStepEditor';
 export { TaskStatusBadge } from './TaskStatusBadge';
 export { TaskPriorityIcon } from './TaskPriorityIcon';
+export { TaskMetadata } from './TaskMetadata';
 export { TaskCardEditor } from './TaskCardEditor';
 export { default } from './index.jsx';

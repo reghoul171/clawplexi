@@ -7,40 +7,40 @@ import { calculatePhase } from '../../utils/calculatePhase';
 
 function StatsGrid({ teamSize, linesOfCode, startDate, progressPercentage, decisionTree }) {
   const phase = calculatePhase(progressPercentage);
-  
+
   const stats = [
     {
       icon: <Users className="w-5 h-5 text-blue-400" />,
       label: 'Team Size',
-      value: teamSize || 1
+      value: teamSize || 1,
     },
     {
       icon: <Code className="w-5 h-5 text-green-400" />,
       label: 'Lines of Code',
-      value: linesOfCode?.toLocaleString() || '0'
+      value: linesOfCode?.toLocaleString() || '0',
     },
     {
       icon: <Calendar className="w-5 h-5 text-purple-400" />,
       label: 'Start Date',
-      value: startDate ? new Date(startDate).toLocaleDateString() : 'Not set'
+      value: startDate ? new Date(startDate).toLocaleDateString() : 'Not set',
     },
     {
       icon: <Clock className="w-5 h-5 text-yellow-400" />,
       label: 'Current Phase',
-      value: phase.name
+      value: phase.name,
     },
     {
       icon: <GitBranch className="w-5 h-5 text-cyan-400" />,
       label: 'Decisions',
-      value: decisionTree?.length || 0
+      value: decisionTree?.length || 0,
     },
     {
       icon: <CheckCircle2 className="w-5 h-5 text-green-400" />,
       label: 'Progress',
-      value: `${progressPercentage}%`
-    }
+      value: `${progressPercentage}%`,
+    },
   ];
-  
+
   return (
     <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {stats.map((stat, index) => (

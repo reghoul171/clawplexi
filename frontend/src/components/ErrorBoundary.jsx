@@ -33,12 +33,8 @@ class ErrorBoundary extends Component {
                 <AlertCircle className="w-8 h-8 text-red-400" />
               </div>
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">
-              Something went wrong
-            </h2>
-            <p className="text-gray-400 mb-6">
-              An unexpected error occurred. Please try again.
-            </p>
+            <h2 className="text-xl font-semibold text-white mb-2">Something went wrong</h2>
+            <p className="text-gray-400 mb-6">An unexpected error occurred. Please try again.</p>
             {this.state.error && (
               <pre className="text-xs text-gray-500 bg-gray-900 p-3 rounded-lg mb-4 overflow-auto max-h-32">
                 {this.state.error.message || String(this.state.error)}

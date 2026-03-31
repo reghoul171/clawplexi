@@ -39,6 +39,7 @@ This document defines the architecture for implementing an interactive Kanban bo
 ### Decision: Create `BoardView/` folder with sub-components
 
 **Rationale:**
+
 - Follows existing `Overview/` and `Sidebar/` patterns in the codebase
 - BoardView is complex enough to warrant separation (estimated 400+ lines)
 - Improves testability and maintainability
@@ -60,14 +61,14 @@ BoardView/
 
 ### Component Responsibilities
 
-| Component | Responsibility |
-|-----------|----------------|
-| `BoardView/index.jsx` | DndContext setup, state management, WebSocket integration |
-| `BoardColumn.jsx` | Drop zone, handles drag-over styling, renders StepCards |
-| `StepCard.jsx` | Draggable element, handles drag handle, displays step info |
-| `DragOverlay.jsx` | Custom drag preview with elevation and shadow |
-| `ColumnHeader.jsx` | Status icon, title, count badge |
-| `useStepDrag.js` | Encapsulates drag start/end logic, optimistic updates |
+| Component             | Responsibility                                             |
+| --------------------- | ---------------------------------------------------------- |
+| `BoardView/index.jsx` | DndContext setup, state management, WebSocket integration  |
+| `BoardColumn.jsx`     | Drop zone, handles drag-over styling, renders StepCards    |
+| `StepCard.jsx`        | Draggable element, handles drag handle, displays step info |
+| `DragOverlay.jsx`     | Custom drag preview with elevation and shadow              |
+| `ColumnHeader.jsx`    | Status icon, title, count badge                            |
+| `useStepDrag.js`      | Encapsulates drag start/end logic, optimistic updates      |
 
 ### Component Interface Design
 
@@ -112,6 +113,7 @@ interface ColumnHeaderProps {
 ### Decision: Local drag state + optimistic updates + WebSocket sync
 
 **Rationale:**
+
 - Drag operations need instant feedback (no network latency acceptable)
 - Existing pattern: WebSocket events for server-originated updates
 - Optimistic updates provide better UX; rollback on failure
@@ -148,40 +150,43 @@ function useStepDrag(project, socket) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleDragEnd = useCallback(async (event) => {
-    const { active, over } = event;
-    
-    if (!over || active.id === over.id) return;
-    
-    const stepId = active.id;
-    const newStatus = over.id; // Column ID = status
-    
-    // 1. Optimistic update (instant UI feedback)
-    const originalSteps = project.implementation_plan;
-    const updatedSteps = originalSteps.map(step => 
-      step.step === stepId ? { ...step, status: newStatus } : step
-    );
-    
-    setOptimisticSteps(updatedSteps);
-    setIsUpdating(true);
-    
-    // 2. Emit to server
-    socket.emit('step_status_update', {
-      projectName: project.project_name,
-      stepId,
-      newStatus,
-      previousStatus: originalSteps.find(s => s.step === stepId)?.status
-    });
-    
-    // 3. Wait for confirmation with timeout
-    // 4. Rollback on failure
-  }, [project, socket]);
+  const handleDragEnd = useCallback(
+    async event => {
+      const { active, over } = event;
+
+      if (!over || active.id === over.id) return;
+
+      const stepId = active.id;
+      const newStatus = over.id; // Column ID = status
+
+      // 1. Optimistic update (instant UI feedback)
+      const originalSteps = project.implementation_plan;
+      const updatedSteps = originalSteps.map(step =>
+        step.step === stepId ? { ...step, status: newStatus } : step
+      );
+
+      setOptimisticSteps(updatedSteps);
+      setIsUpdating(true);
+
+      // 2. Emit to server
+      socket.emit('step_status_update', {
+        projectName: project.project_name,
+        stepId,
+        newStatus,
+        previousStatus: originalSteps.find(s => s.step === stepId)?.status,
+      });
+
+      // 3. Wait for confirmation with timeout
+      // 4. Rollback on failure
+    },
+    [project, socket]
+  );
 
   return {
     steps: optimisticSteps ?? project.implementation_plan,
     isUpdating,
     error,
-    handleDragEnd
+    handleDragEnd,
   };
 }
 ```
@@ -193,13 +198,13 @@ function useStepDrag(project, socket) {
 const handleUpdateFailure = (error, originalSteps) => {
   setOptimisticSteps(null); // Revert to server state
   setError(error);
-  
+
   // Show toast notification
   showToast({
     type: 'error',
     message: 'Failed to update step status. Changes reverted.',
     action: 'Retry',
-    onAction: () => retryUpdate()
+    onAction: () => retryUpdate(),
   });
 };
 ```
@@ -211,6 +216,7 @@ const handleUpdateFailure = (error, originalSteps) => {
 ### Decision: New WebSocket event + REST fallback + file system update
 
 **Rationale:**
+
 - Existing pattern: WebSocket events for real-time updates (`project_updated`, `task_completed`)
 - REST endpoint needed for resilience and for clients without WebSocket
 - Server already watches `.project_state.json` files, but we need to UPDATE them
@@ -256,34 +262,32 @@ socket.emit('step_status_error', {
 app.patch('/api/projects/:name/steps/:stepId/status', async (req, res) => {
   const { name, stepId } = req.params;
   const { status } = req.body;
-  
+
   if (!['pending', 'in_progress', 'done'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
-  
+
   try {
     // 1. Get project from database
     const project = await db.getProject(name);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-    
+
     // 2. Update step status
-    const updatedPlan = project.implementation_plan.map(step => 
-      String(step.step) === String(stepId) 
-        ? { ...step, status } 
-        : step
+    const updatedPlan = project.implementation_plan.map(step =>
+      String(step.step) === String(stepId) ? { ...step, status } : step
     );
-    
+
     // 3. Write to .project_state.json
     await updateProjectState(project.path, { implementation_plan: updatedPlan });
-    
+
     // 4. Update database
     await db.upsertProject({ ...project, implementation_plan: updatedPlan }, project.path);
-    
+
     // 5. Broadcast update
     io.emit('project_updated', { ...project, implementation_plan: updatedPlan });
-    
+
     res.json({ success: true, step: { step: stepId, status } });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -304,17 +308,17 @@ const path = require('path');
  */
 async function updateProjectState(projectPath, updates) {
   const stateFile = path.join(projectPath, '.project_state.json');
-  
+
   // Read existing state
   const content = await fs.readFile(stateFile, 'utf8');
   const state = JSON.parse(content);
-  
+
   // Merge updates
   const updatedState = { ...state, ...updates };
-  
+
   // Write back
   await fs.writeFile(stateFile, JSON.stringify(updatedState, null, 2));
-  
+
   return updatedState;
 }
 
@@ -326,49 +330,46 @@ module.exports = { updateProjectState };
 ```javascript
 // backend/server.js - Add to io.on('connection')
 
-socket.on('step_status_update', async (data) => {
+socket.on('step_status_update', async data => {
   const { projectName, stepId, newStatus, previousStatus } = data;
-  
+
   try {
     // Delegate to REST handler logic
     const project = await db.getProject(projectName);
-    
+
     if (!project) {
       return socket.emit('step_status_error', {
         projectName,
         stepId,
         error: 'Project not found',
-        previousStatus
+        previousStatus,
       });
     }
-    
-    const updatedPlan = project.implementation_plan.map(step => 
-      String(step.step) === String(stepId) 
-        ? { ...step, status: newStatus } 
-        : step
+
+    const updatedPlan = project.implementation_plan.map(step =>
+      String(step.step) === String(stepId) ? { ...step, status: newStatus } : step
     );
-    
+
     await updateProjectState(project.path, { implementation_plan: updatedPlan });
     await db.upsertProject({ ...project, implementation_plan: updatedPlan }, project.path);
-    
+
     // Broadcast to all clients
     io.emit('project_updated', { ...project, implementation_plan: updatedPlan });
-    
+
     // Confirm to sender
     socket.emit('step_status_updated', {
       projectName,
       stepId,
       newStatus,
       updatedAt: new Date().toISOString(),
-      success: true
+      success: true,
     });
-    
   } catch (error) {
     socket.emit('step_status_error', {
       projectName,
       stepId,
       error: error.message,
-      previousStatus
+      previousStatus,
     });
   }
 });
@@ -380,15 +381,15 @@ socket.on('step_status_update', async (data) => {
 
 ### Decision Matrix
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Draggable area | **Drag handle** | Prevents accidental drags, follows Kanban conventions, enables text selection |
-| Animation duration | **200ms** | Fast enough to feel snappy, slow enough to see movement |
-| Easing function | `cubic-bezier(0.4, 0, 0.2, 1)` | Standard Material Design ease-out |
-| Drop failure | **Rollback + toast** | Clear feedback, automatic recovery |
-| Column styling during drag-over | **Border highlight + subtle glow** | Visual feedback without being distracting |
-| Empty column drop | **Allowed** | All columns can receive drops |
-| Cross-column movement | **Animated** | Card animates from source to target column |
+| Decision                        | Choice                             | Rationale                                                                     |
+| ------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------- |
+| Draggable area                  | **Drag handle**                    | Prevents accidental drags, follows Kanban conventions, enables text selection |
+| Animation duration              | **200ms**                          | Fast enough to feel snappy, slow enough to see movement                       |
+| Easing function                 | `cubic-bezier(0.4, 0, 0.2, 1)`     | Standard Material Design ease-out                                             |
+| Drop failure                    | **Rollback + toast**               | Clear feedback, automatic recovery                                            |
+| Column styling during drag-over | **Border highlight + subtle glow** | Visual feedback without being distracting                                     |
+| Empty column drop               | **Allowed**                        | All columns can receive drops                                                 |
+| Cross-column movement           | **Animated**                       | Card animates from source to target column                                    |
 
 ### Animation Specifications
 
@@ -416,8 +417,12 @@ socket.on('step_status_update', async (data) => {
 }
 
 @keyframes float {
-  0% { transform: scale(1) rotate(0deg); }
-  100% { transform: scale(1.05) rotate(3deg); }
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(1.05) rotate(3deg);
+  }
 }
 ```
 
@@ -427,7 +432,7 @@ socket.on('step_status_update', async (data) => {
 // StepCard.jsx
 <div className="group relative">
   {/* Drag handle - visible on hover */}
-  <div 
+  <div
     className="absolute left-0 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 
                cursor-grab active:cursor-grabbing p-1 text-gray-500 hover:text-gray-300
                transition-opacity duration-150"
@@ -435,7 +440,7 @@ socket.on('step_status_update', async (data) => {
   >
     <GripVertical className="w-4 h-4" />
   </div>
-  
+
   {/* Card content */}
   <div className="pl-6">
     <span className="text-xs font-mono text-gray-500">Step {step.step}</span>
@@ -468,9 +473,7 @@ socket.on('step_status_update', async (data) => {
   <div className="bg-red-900 border border-red-700 rounded-lg p-4 flex items-center gap-3">
     <AlertCircle className="w-5 h-5 text-red-400" />
     <span className="text-sm text-white">Failed to update step status</span>
-    <button className="text-red-300 hover:text-white text-sm underline">
-      Retry
-    </button>
+    <button className="text-red-300 hover:text-white text-sm underline">Retry</button>
   </div>
 </div>
 ```
@@ -740,10 +743,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 
-import {
-  useDraggable,
-  useDroppable,
-} from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 
 import { CSS } from '@dnd-kit/utilities';
 ```
@@ -761,7 +761,7 @@ function BoardView({ project }) {
     useSensor(KeyboardSensor)
   );
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = event => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       // Handle drop
@@ -769,15 +769,9 @@ function BoardView({ project }) {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       {/* Columns */}
-      <DragOverlay>
-        {/* Custom preview */}
-      </DragOverlay>
+      <DragOverlay>{/* Custom preview */}</DragOverlay>
     </DndContext>
   );
 }
@@ -785,6 +779,6 @@ function BoardView({ project }) {
 
 ---
 
-*Document Version: 1.0.0*  
-*Created: 2026-03-28*  
-*Status: Ready for Planner*
+_Document Version: 1.0.0_  
+_Created: 2026-03-28_  
+_Status: Ready for Planner_

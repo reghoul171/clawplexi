@@ -1,6 +1,6 @@
 /**
  * Configuration Module
- * 
+ *
  * Handles loading, merging, and accessing configuration from multiple sources.
  * Configuration precedence: CLI args > Environment > Config file > Defaults
  */
@@ -21,18 +21,18 @@ const DEFAULT_CONFIG = {
     // In development, allow all origins or match patterns
     corsAllowAllInDev: true,
     // Patterns for dynamic origin matching (e.g., tunnel URLs)
-    corsOriginPatterns: ['.trycloudflare.com', '.loca.lt', '.ngrok.io', '.ngrok-free.app']
+    corsOriginPatterns: ['.trycloudflare.com', '.loca.lt', '.ngrok.io', '.ngrok-free.app'],
   },
   frontend: {
     port: 5173,
-    apiUrl: 'http://localhost:3001'
+    apiUrl: 'http://localhost:3001',
   },
   paths: {
     projectsDir: '~/.openclaw/shared-project',
     stateFile: '~/.openclaw/pm-dashboard/state.db',
     logsDir: '~/.openclaw/pm-dashboard/logs',
     configFile: '~/.openclaw/pm-dashboard/config.json',
-    projectsStateDir: '~/.openclaw/pm-dashboard/projects'
+    projectsStateDir: '~/.openclaw/pm-dashboard/projects',
   },
   sync: {
     enabled: true,
@@ -40,7 +40,7 @@ const DEFAULT_CONFIG = {
     intervalMs: 30000,
     remote: 'origin',
     branch: 'main',
-    autoCommit: true
+    autoCommit: true,
   },
   watcher: {
     ignorePatterns: [
@@ -48,34 +48,34 @@ const DEFAULT_CONFIG = {
       '**/.git/**',
       '**/dist/**',
       '**/build/**',
-      '**/.DS_Store'
-    ]
+      '**/.DS_Store',
+    ],
   },
   logging: {
     level: 'info',
     console: true,
-    file: true
-  }
+    file: true,
+  },
 };
 
 /**
  * Environment variable mappings (flat structure to nested config)
  */
 const ENV_MAPPINGS = {
-  'PM_DASHBOARD_PORT': { path: 'server.port', type: 'number' },
-  'PM_DASHBOARD_HOST': { path: 'server.host', type: 'string' },
-  'PM_DASHBOARD_CORS_ORIGINS': { path: 'server.corsOrigins', type: 'array' },
-  'PM_DASHBOARD_CORS_ALLOW_ALL': { path: 'server.corsAllowAllInDev', type: 'boolean' },
-  'PM_DASHBOARD_CORS_PATTERNS': { path: 'server.corsOriginPatterns', type: 'array' },
-  'PM_DASHBOARD_FRONTEND_PORT': { path: 'frontend.port', type: 'number' },
-  'PM_DASHBOARD_API_URL': { path: 'frontend.apiUrl', type: 'string' },
-  'PM_DASHBOARD_PROJECTS_DIR': { path: 'paths.projectsDir', type: 'string' },
-  'PM_DASHBOARD_STATE_FILE': { path: 'paths.stateFile', type: 'string' },
-  'PM_DASHBOARD_LOGS_DIR': { path: 'paths.logsDir', type: 'string' },
-  'PM_DASHBOARD_SYNC_ENABLED': { path: 'sync.enabled', type: 'boolean' },
-  'PM_DASHBOARD_SYNC_INTERVAL': { path: 'sync.intervalMs', type: 'number' },
-  'PM_DASHBOARD_LOG_LEVEL': { path: 'logging.level', type: 'string' },
-  'PM_DASHBOARD_CONFIG_FILE': { path: '_configFile', type: 'string' }
+  PM_DASHBOARD_PORT: { path: 'server.port', type: 'number' },
+  PM_DASHBOARD_HOST: { path: 'server.host', type: 'string' },
+  PM_DASHBOARD_CORS_ORIGINS: { path: 'server.corsOrigins', type: 'array' },
+  PM_DASHBOARD_CORS_ALLOW_ALL: { path: 'server.corsAllowAllInDev', type: 'boolean' },
+  PM_DASHBOARD_CORS_PATTERNS: { path: 'server.corsOriginPatterns', type: 'array' },
+  PM_DASHBOARD_FRONTEND_PORT: { path: 'frontend.port', type: 'number' },
+  PM_DASHBOARD_API_URL: { path: 'frontend.apiUrl', type: 'string' },
+  PM_DASHBOARD_PROJECTS_DIR: { path: 'paths.projectsDir', type: 'string' },
+  PM_DASHBOARD_STATE_FILE: { path: 'paths.stateFile', type: 'string' },
+  PM_DASHBOARD_LOGS_DIR: { path: 'paths.logsDir', type: 'string' },
+  PM_DASHBOARD_SYNC_ENABLED: { path: 'sync.enabled', type: 'boolean' },
+  PM_DASHBOARD_SYNC_INTERVAL: { path: 'sync.intervalMs', type: 'number' },
+  PM_DASHBOARD_LOG_LEVEL: { path: 'logging.level', type: 'string' },
+  PM_DASHBOARD_CONFIG_FILE: { path: '_configFile', type: 'string' },
 };
 
 /**
@@ -87,14 +87,14 @@ const ENV_MAPPINGS = {
 function setNestedValue(obj, path, value) {
   const parts = path.split('.');
   let current = obj;
-  
+
   for (let i = 0; i < parts.length - 1; i++) {
     if (!(parts[i] in current)) {
       current[parts[i]] = {};
     }
     current = current[parts[i]];
   }
-  
+
   current[parts[parts.length - 1]] = value;
 }
 
@@ -108,14 +108,14 @@ function setNestedValue(obj, path, value) {
 function getNestedValue(obj, path, defaultValue = undefined) {
   const parts = path.split('.');
   let current = obj;
-  
+
   for (const part of parts) {
     if (current === null || current === undefined || !(part in current)) {
       return defaultValue;
     }
     current = current[part];
   }
-  
+
   return current;
 }
 
@@ -147,7 +147,7 @@ function convertType(value, type) {
  */
 function deepMerge(target, source) {
   const result = { ...target };
-  
+
   for (const key of Object.keys(source)) {
     if (source[key] instanceof Object && key in target && target[key] instanceof Object) {
       result[key] = deepMerge(target[key], source[key]);
@@ -155,7 +155,7 @@ function deepMerge(target, source) {
       result[key] = source[key];
     }
   }
-  
+
   return result;
 }
 
@@ -166,7 +166,7 @@ function deepMerge(target, source) {
  */
 function loadConfigFile(configPath) {
   const resolvedPath = resolvePath(configPath);
-  
+
   try {
     if (fs.existsSync(resolvedPath)) {
       const content = fs.readFileSync(resolvedPath, 'utf8');
@@ -175,7 +175,7 @@ function loadConfigFile(configPath) {
   } catch (error) {
     console.warn(`[Config] Failed to load config from ${resolvedPath}:`, error.message);
   }
-  
+
   return null;
 }
 
@@ -185,20 +185,20 @@ function loadConfigFile(configPath) {
  */
 function loadEnvironmentConfig() {
   const envConfig = {};
-  
+
   for (const [envVar, mapping] of Object.entries(ENV_MAPPINGS)) {
     if (process.env[envVar] !== undefined) {
       const value = convertType(process.env[envVar], mapping.type);
-      
+
       // Skip special _configFile key
       if (mapping.path === '_configFile') {
         continue;
       }
-      
+
       setNestedValue(envConfig, mapping.path, value);
     }
   }
-  
+
   return envConfig;
 }
 
@@ -208,19 +208,19 @@ function loadEnvironmentConfig() {
  */
 function detectOpenClawConfig() {
   const config = {};
-  
+
   if (isOpenClawEnvironment()) {
     const openclawConfigPath = path.join(getOpenClawHome(), 'openclaw.json');
-    
+
     try {
       if (fs.existsSync(openclawConfigPath)) {
         const openclawConfig = JSON.parse(fs.readFileSync(openclawConfigPath, 'utf8'));
-        
+
         // Use OpenClaw gateway URL if available
         if (openclawConfig.gateway?.port) {
           config.openclawGatewayUrl = `http://localhost:${openclawConfig.gateway.port}`;
         }
-        
+
         // Use OpenClaw shared-project if our projectsDir is still default
         config.paths = config.paths || {};
         config.paths.projectsDir = path.join(getOpenClawHome(), 'shared-project');
@@ -229,7 +229,7 @@ function detectOpenClawConfig() {
       console.warn('[Config] Could not read OpenClaw config:', error.message);
     }
   }
-  
+
   return config;
 }
 
@@ -242,33 +242,32 @@ function detectOpenClawConfig() {
  */
 function loadConfig(options = {}) {
   // Determine config file path
-  const configFile = options.configFile || 
-                     process.env.PM_DASHBOARD_CONFIG_FILE || 
-                     DEFAULT_CONFIG.paths.configFile;
-  
+  const configFile =
+    options.configFile || process.env.PM_DASHBOARD_CONFIG_FILE || DEFAULT_CONFIG.paths.configFile;
+
   // Load from file
   const fileConfig = loadConfigFile(configFile) || {};
-  
+
   // Load from environment
   const envConfig = loadEnvironmentConfig();
-  
+
   // Detect OpenClaw environment
   const openclawConfig = detectOpenClawConfig();
-  
+
   // Merge all sources (later overrides earlier)
   let merged = deepMerge(DEFAULT_CONFIG, openclawConfig);
   merged = deepMerge(merged, fileConfig);
   merged = deepMerge(merged, envConfig);
-  
+
   // Apply manual overrides
   if (options.overrides) {
     merged = deepMerge(merged, options.overrides);
   }
-  
+
   // Store the config file path
   merged._configFile = resolvePath(configFile);
   merged._loadedAt = new Date().toISOString();
-  
+
   return merged;
 }
 
@@ -280,17 +279,17 @@ function loadConfig(options = {}) {
 function saveConfig(config, configFile) {
   const filePath = resolvePath(configFile || config._configFile || DEFAULT_CONFIG.paths.configFile);
   const dir = path.dirname(filePath);
-  
+
   // Ensure directory exists
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-  
+
   // Remove internal fields before saving
   const toSave = { ...config };
   delete toSave._configFile;
   delete toSave._loadedAt;
-  
+
   fs.writeFileSync(filePath, JSON.stringify(toSave, null, 2));
   console.log(`[Config] Saved configuration to ${filePath}`);
 }
@@ -302,7 +301,7 @@ function saveConfig(config, configFile) {
  */
 function validateConfig(config) {
   const errors = [];
-  
+
   // Validate server port
   if (config.server?.port) {
     const port = config.server.port;
@@ -310,7 +309,7 @@ function validateConfig(config) {
       errors.push(`Invalid server port: ${port}`);
     }
   }
-  
+
   // Validate sync interval
   if (config.sync?.intervalMs) {
     const interval = config.sync.intervalMs;
@@ -318,16 +317,16 @@ function validateConfig(config) {
       errors.push(`Invalid sync interval: ${interval} (must be >= 1000ms)`);
     }
   }
-  
+
   // Validate logging level
   const validLevels = ['debug', 'info', 'warn', 'error'];
   if (config.logging?.level && !validLevels.includes(config.logging.level)) {
     errors.push(`Invalid logging level: ${config.logging.level}`);
   }
-  
+
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -355,5 +354,5 @@ module.exports = {
   setNestedValue,
   deepMerge,
   DEFAULT_CONFIG,
-  ENV_MAPPINGS
+  ENV_MAPPINGS,
 };

@@ -1,20 +1,33 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, FileCode, Plus, Play, FileText, Loader2, CheckCircle2, XCircle as XCircleIcon, X, Clock, AlertCircle } from 'lucide-react';
+import {
+  CheckCircle,
+  XCircle,
+  FileCode,
+  Plus,
+  Play,
+  FileText,
+  Loader2,
+  CheckCircle2,
+  XCircle as XCircleIcon,
+  X,
+  Clock,
+  AlertCircle,
+} from 'lucide-react';
 import { useTesterAgent } from '../hooks/useTesterAgent';
 
 function Tests({ project }) {
-  const { 
-    loading, 
-    pendingTasks, 
-    completedTasks, 
-    lastResult, 
-    createTests, 
-    runTests, 
-    generateReport, 
-    clearError, 
-    dismissTask 
+  const {
+    loading,
+    pendingTasks,
+    completedTasks,
+    lastResult,
+    createTests,
+    runTests,
+    generateReport,
+    clearError,
+    dismissTask,
   } = useTesterAgent();
-  
+
   const [toast, setToast] = useState(null);
   const [showReport, setShowReport] = useState(null);
 
@@ -50,7 +63,7 @@ function Tests({ project }) {
     }
   };
 
-  const handleViewReport = (task) => {
+  const handleViewReport = task => {
     setShowReport(task);
   };
 
@@ -62,10 +75,8 @@ function Tests({ project }) {
   const projectPendingTasks = Object.values(pendingTasks).filter(
     t => t.projectName === project.project_name
   );
-  
-  const projectCompletedTasks = completedTasks.filter(
-    t => t.projectName === project.project_name
-  );
+
+  const projectCompletedTasks = completedTasks.filter(t => t.projectName === project.project_name);
 
   if (!project.tests_generated || project.tests_generated.length === 0) {
     return (
@@ -81,7 +92,7 @@ function Tests({ project }) {
               label="Generate New Tests"
               color="blue"
             />
-            
+
             <ActionButton
               onClick={handleRunTests}
               loading={loading.runTests}
@@ -90,7 +101,7 @@ function Tests({ project }) {
               label="Run All Tests"
               color="green"
             />
-            
+
             <ActionButton
               onClick={handleGenerateReport}
               loading={loading.generateReport}
@@ -126,9 +137,9 @@ function Tests({ project }) {
             </h3>
             <div className="space-y-3">
               {projectCompletedTasks.slice(0, 5).map(task => (
-                <CompletedTaskCard 
-                  key={task.taskId} 
-                  task={task} 
+                <CompletedTaskCard
+                  key={task.taskId}
+                  task={task}
                   onViewReport={handleViewReport}
                   onDismiss={() => dismissTask(task.taskId)}
                 />
@@ -143,18 +154,17 @@ function Tests({ project }) {
             <FileCode className="w-5 h-5 text-blue-400" />
             <h3 className="text-lg font-semibold text-white">Test Results</h3>
           </div>
-          <p className="text-gray-400">No tests generated yet. Click "Generate New Tests" to create tests for this project.</p>
+          <p className="text-gray-400">
+            No tests generated yet. Click &quot;Generate New Tests&quot; to create tests for this
+            project.
+          </p>
         </div>
 
         {/* Toast Notification */}
-        {toast && (
-          <Toast toast={toast} onClose={() => setToast(null)} />
-        )}
+        {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
 
         {/* Report Modal */}
-        {showReport && (
-          <ReportModal task={showReport} onClose={handleCloseReport} />
-        )}
+        {showReport && <ReportModal task={showReport} onClose={handleCloseReport} />}
       </div>
     );
   }
@@ -164,7 +174,7 @@ function Tests({ project }) {
   const totalTests = project.tests_generated.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="tests-view">
       {/* Action Buttons */}
       <div className="bg-gray-800 rounded-xl p-4">
         <div className="flex flex-wrap gap-3">
@@ -176,7 +186,7 @@ function Tests({ project }) {
             label="Generate New Tests"
             color="blue"
           />
-          
+
           <ActionButton
             onClick={handleRunTests}
             loading={loading.runTests}
@@ -185,7 +195,7 @@ function Tests({ project }) {
             label="Run All Tests"
             color="green"
           />
-          
+
           <ActionButton
             onClick={handleGenerateReport}
             loading={loading.generateReport}
@@ -221,9 +231,9 @@ function Tests({ project }) {
           </h3>
           <div className="space-y-3">
             {projectCompletedTasks.slice(0, 5).map(task => (
-              <CompletedTaskCard 
-                key={task.taskId} 
-                task={task} 
+              <CompletedTaskCard
+                key={task.taskId}
+                task={task}
                 onViewReport={handleViewReport}
                 onDismiss={() => dismissTask(task.taskId)}
               />
@@ -295,9 +305,11 @@ function Tests({ project }) {
                     ) : (
                       <XCircle className="w-5 h-5 text-red-500" />
                     )}
-                    <span className={`ml-2 text-sm ${
-                      test.status === 'passing' ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    <span
+                      className={`ml-2 text-sm ${
+                        test.status === 'passing' ? 'text-green-400' : 'text-red-400'
+                      }`}
+                    >
                       {test.status}
                     </span>
                   </div>
@@ -315,14 +327,10 @@ function Tests({ project }) {
       </div>
 
       {/* Toast Notification */}
-      {toast && (
-        <Toast toast={toast} onClose={() => setToast(null)} />
-      )}
+      {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
 
       {/* Report Modal */}
-      {showReport && (
-        <ReportModal task={showReport} onClose={handleCloseReport} />
-      )}
+      {showReport && <ReportModal task={showReport} onClose={handleCloseReport} />}
     </div>
   );
 }
@@ -363,7 +371,7 @@ function TaskProgressCard({ task }) {
   const typeLabels = {
     'create-tests': 'Creating Tests',
     'run-tests': 'Running Tests',
-    'generate-report': 'Generating Report'
+    'generate-report': 'Generating Report',
   };
 
   return (
@@ -373,7 +381,7 @@ function TaskProgressCard({ task }) {
         <span className="text-sm text-gray-400">{task.progress}%</span>
       </div>
       <div className="h-2 bg-gray-600 rounded-full overflow-hidden mb-2">
-        <div 
+        <div
           className="h-full bg-blue-500 transition-all duration-300"
           style={{ width: `${task.progress}%` }}
         />
@@ -388,7 +396,7 @@ function CompletedTaskCard({ task, onViewReport, onDismiss }) {
   const typeLabels = {
     'create-tests': 'Test Creation',
     'run-tests': 'Test Run',
-    'generate-report': 'Report Generation'
+    'generate-report': 'Report Generation',
   };
 
   return (
@@ -409,10 +417,7 @@ function CompletedTaskCard({ task, onViewReport, onDismiss }) {
         >
           View Report
         </button>
-        <button
-          onClick={onDismiss}
-          className="p-1 hover:bg-gray-600 rounded transition-colors"
-        >
+        <button onClick={onDismiss} className="p-1 hover:bg-gray-600 rounded transition-colors">
           <X className="w-4 h-4 text-gray-400" />
         </button>
       </div>
@@ -423,21 +428,18 @@ function CompletedTaskCard({ task, onViewReport, onDismiss }) {
 // Toast Component
 function Toast({ toast, onClose }) {
   return (
-    <div className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg z-50 ${
-      toast.type === 'success' 
-        ? 'bg-green-600 text-white' 
-        : 'bg-red-600 text-white'
-    }`}>
+    <div
+      className={`fixed bottom-4 right-4 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg z-50 ${
+        toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+      }`}
+    >
       {toast.type === 'success' ? (
         <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
       ) : (
         <XCircleIcon className="w-5 h-5 flex-shrink-0" />
       )}
       <span className="text-sm">{toast.message}</span>
-      <button
-        onClick={onClose}
-        className="ml-2 hover:opacity-75 transition-opacity"
-      >
+      <button onClick={onClose} className="ml-2 hover:opacity-75 transition-opacity">
         <X className="w-4 h-4" />
       </button>
     </div>
@@ -449,7 +451,7 @@ function ReportModal({ task, onClose }) {
   const typeLabels = {
     'create-tests': 'Test Creation Report',
     'run-tests': 'Test Run Report',
-    'generate-report': 'Test Report'
+    'generate-report': 'Test Report',
   };
 
   return (
@@ -463,10 +465,7 @@ function ReportModal({ task, onClose }) {
               {typeLabels[task.type] || 'Task Report'}
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-gray-600 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>

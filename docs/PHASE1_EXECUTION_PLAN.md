@@ -13,13 +13,16 @@ Transform the current flat project list sidebar into a ClickUp-style hierarchica
 ## Current State Analysis
 
 ### Existing Sidebar (`Sidebar.jsx`)
+
 - Flat list of projects
 - Single-level navigation
 - Progress bar per project
 - WebSocket connection status
 
 ### Data Model
+
 Current project schema:
+
 ```json
 {
   "project_name": "String",
@@ -36,6 +39,7 @@ Current project schema:
 ## Target Architecture
 
 ### New Sidebar Structure
+
 ```
 Workspace (collapsible header)
 ├── Space: Development (collapsible)
@@ -51,6 +55,7 @@ Workspace (collapsible header)
 ```
 
 ### Component Hierarchy
+
 ```
 Sidebar/
 ├── index.jsx              # Main sidebar container
@@ -67,6 +72,7 @@ Sidebar/
 ### Step 1: Create Sidebar Component Directory Structure (30 min)
 
 **Files to create:**
+
 ```
 frontend/src/components/Sidebar/
 ├── index.jsx
@@ -77,6 +83,7 @@ frontend/src/components/Sidebar/
 ```
 
 **Action:**
+
 ```bash
 mkdir -p ~/openclaw-pm-dashboard/frontend/src/components/Sidebar
 touch ~/openclaw-pm-dashboard/frontend/src/components/Sidebar/index.jsx
@@ -93,6 +100,7 @@ touch ~/openclaw-pm-dashboard/frontend/src/components/Sidebar/SidebarFooter.jsx
 **Purpose:** Display workspace name with collapse/expand toggle
 
 **Props:**
+
 ```jsx
 {
   workspaceName: string,      // e.g., "My Workspace"
@@ -103,12 +111,14 @@ touch ~/openclaw-pm-dashboard/frontend/src/components/Sidebar/SidebarFooter.jsx
 ```
 
 **Behavior:**
+
 - Click header to collapse/expand entire sidebar content
 - Show workspace icon (Building2 or FolderOpen)
 - Display project count badge
 - Smooth collapse animation
 
 **Implementation notes:**
+
 - Use `lucide-react` for icons (already in dependencies)
 - Use Tailwind `transition-all duration-200` for animations
 - Store collapse state in parent component
@@ -120,6 +130,7 @@ touch ~/openclaw-pm-dashboard/frontend/src/components/Sidebar/SidebarFooter.jsx
 **Purpose:** Collapsible group of lists within a space
 
 **Props:**
+
 ```jsx
 {
   space: {
@@ -137,19 +148,21 @@ touch ~/openclaw-pm-dashboard/frontend/src/components/Sidebar/SidebarFooter.jsx
 ```
 
 **Behavior:**
+
 - Space name with colored icon
 - Chevron rotation on expand/collapse
 - Animated height transition for list reveal
 - Click anywhere on header to toggle
 
 **Icon mapping:**
+
 ```javascript
 const spaceIcons = {
   development: 'Code2',
   planning: 'Calendar',
   testing: 'FlaskConical',
   design: 'Palette',
-  deployment: 'Rocket'
+  deployment: 'Rocket',
 };
 ```
 
@@ -160,6 +173,7 @@ const spaceIcons = {
 **Purpose:** Individual list item within a space
 
 **Props:**
+
 ```jsx
 {
   list: {
@@ -175,6 +189,7 @@ const spaceIcons = {
 ```
 
 **Behavior:**
+
 - Indented under space section
 - Status indicator dot (colored by status)
 - Task count badge
@@ -188,6 +203,7 @@ const spaceIcons = {
 **Purpose:** Connection status and settings
 
 **Props:**
+
 ```jsx
 {
   connected: boolean,
@@ -196,6 +212,7 @@ const spaceIcons = {
 ```
 
 **Behavior:**
+
 - WebSocket connection indicator
 - "Connected"/"Disconnected" text
 - Optional settings gear icon
@@ -209,6 +226,7 @@ const spaceIcons = {
 **New utility file:** `frontend/src/utils/transformWorkspace.js`
 
 **Function signature:**
+
 ```javascript
 /**
  * Transform flat project list into workspace structure
@@ -223,12 +241,14 @@ export function transformToWorkspace(projects) {
 ```
 
 **Grouping logic:**
+
 1. Each project becomes a "List" under the "Development" space
 2. Implementation steps with status become task counts
 3. Tests go under "Testing" space
 4. Decision tree items go under "Planning" space
 
 **Example transformation:**
+
 ```javascript
 // Input: ProjectAlpha
 {
@@ -269,6 +289,7 @@ export function transformToWorkspace(projects) {
 **File:** `frontend/src/components/Sidebar/index.jsx`
 
 **Props:**
+
 ```jsx
 {
   projects: Array,
@@ -279,12 +300,14 @@ export function transformToWorkspace(projects) {
 ```
 
 **State:**
+
 ```jsx
 const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
 const [expandedSpaces, setExpandedSpaces] = useState(new Set());
 ```
 
 **Behavior:**
+
 - Render WorkspaceHeader at top
 - Map through spaces → SpaceSection
 - Track expanded spaces in state
@@ -298,6 +321,7 @@ const [expandedSpaces, setExpandedSpaces] = useState(new Set());
 **Approach:** Use Tailwind utility classes (existing pattern)
 
 **Key style patterns:**
+
 ```css
 /* Sidebar container */
 .w-72 bg-gray-800 border-r border-gray-700 flex flex-col
@@ -322,12 +346,14 @@ transition-all duration-200 ease-in-out
 **Changes to `App.jsx`:**
 
 1. Import new Sidebar:
+
 ```jsx
 import Sidebar from './components/Sidebar';
 // Remove old: import Sidebar from './components/Sidebar.jsx';
 ```
 
 2. Pass required props:
+
 ```jsx
 <Sidebar
   projects={projects}
@@ -344,6 +370,7 @@ import Sidebar from './components/Sidebar';
 ### Step 10: Testing & Polish (1.5 hours)
 
 **Manual testing checklist:**
+
 - [ ] Sidebar renders with workspace header
 - [ ] Spaces expand/collapse correctly
 - [ ] List items show correct status indicators
@@ -354,6 +381,7 @@ import Sidebar from './components/Sidebar';
 - [ ] Dark mode colors consistent
 
 **Edge cases:**
+
 - Empty project list
 - Single project
 - Long project names (truncate)
@@ -418,19 +446,19 @@ frontend/src/
 
 ## Estimated Time Breakdown
 
-| Step | Task | Time |
-|------|------|------|
-| 1 | Directory structure | 30 min |
-| 2 | WorkspaceHeader | 1 hr |
-| 3 | SpaceSection | 1.5 hr |
-| 4 | ListTree | 1 hr |
-| 5 | SidebarFooter | 30 min |
-| 6 | Data transformation | 1.5 hr |
-| 7 | Main container | 1.5 hr |
-| 8 | Styles | 30 min |
-| 9 | App integration | 1 hr |
-| 10 | Testing & polish | 1.5 hr |
-| **Total** | | **10.5 hrs** |
+| Step      | Task                | Time         |
+| --------- | ------------------- | ------------ |
+| 1         | Directory structure | 30 min       |
+| 2         | WorkspaceHeader     | 1 hr         |
+| 3         | SpaceSection        | 1.5 hr       |
+| 4         | ListTree            | 1 hr         |
+| 5         | SidebarFooter       | 30 min       |
+| 6         | Data transformation | 1.5 hr       |
+| 7         | Main container      | 1.5 hr       |
+| 8         | Styles              | 30 min       |
+| 9         | App integration     | 1 hr         |
+| 10        | Testing & polish    | 1.5 hr       |
+| **Total** |                     | **10.5 hrs** |
 
 **With buffer for iteration/debugging: 2-3 days**
 
@@ -439,11 +467,13 @@ frontend/src/
 ## Dependencies
 
 ### Already Installed
+
 - `lucide-react` - Icons
 - `tailwindcss` - Styling
 - `react` - Core
 
 ### Not Required for Phase 1
+
 - `@dnd-kit/*` - Required in Phase 3 only
 
 ---

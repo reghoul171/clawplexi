@@ -12,7 +12,7 @@ function SidebarFooter({ connected, onSettingsClick }) {
           <User className="w-3.5 h-3.5" />
           <span>Workspace</span>
         </button>
-        
+
         <div className="flex items-center gap-1.5">
           {connected ? (
             <>
@@ -27,11 +27,13 @@ function SidebarFooter({ connected, onSettingsClick }) {
           )}
         </div>
       </div>
-      
+
       {/* Connection indicator bar */}
-      <div className={`mt-2 h-0.5 rounded-full transition-colors duration-300 ${
-        connected ? 'bg-green-500/50' : 'bg-red-500/50'
-      }`} />
+      <div
+        className={`mt-2 h-0.5 rounded-full transition-colors duration-300 ${
+          connected ? 'bg-green-500/50' : 'bg-red-500/50'
+        }`}
+      />
     </div>
   );
 }

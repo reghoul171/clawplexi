@@ -11,12 +11,12 @@ export function useTesterAgent() {
     runTests: false,
     generateReport: false,
   });
-  
+
   const [pendingTasks, setPendingTasks] = useState({});
   const [completedTasks, setCompletedTasks] = useState([]);
   const [lastResult, setLastResult] = useState(null);
   const [error, setError] = useState(null);
-  
+
   const socketRef = useRef(null);
 
   // Setup socket listeners for task events
@@ -28,19 +28,19 @@ export function useTesterAgent() {
       console.log('[useTesterAgent] Connected to WebSocket');
     });
 
-    socket.on('task_started', (task) => {
+    socket.on('task_started', task => {
       console.log('[useTesterAgent] Task started:', task);
       setPendingTasks(prev => ({
         ...prev,
         [task.taskId]: {
           ...task,
           progress: 0,
-          message: task.message || 'Starting...'
-        }
+          message: task.message || 'Starting...',
+        },
       }));
     });
 
-    socket.on('task_progress', (update) => {
+    socket.on('task_progress', update => {
       console.log('[useTesterAgent] Task progress:', update);
       setPendingTasks(prev => {
         if (prev[update.taskId]) {
@@ -50,30 +50,30 @@ export function useTesterAgent() {
               ...prev[update.taskId],
               progress: update.progress,
               message: update.message,
-              status: update.status || 'running'
-            }
+              status: update.status || 'running',
+            },
           };
         }
         return prev;
       });
     });
 
-    socket.on('task_completed', (result) => {
+    socket.on('task_completed', result => {
       console.log('[useTesterAgent] Task completed:', result);
-      
+
       // Remove from pending
       setPendingTasks(prev => {
         const updated = { ...prev };
         delete updated[result.taskId];
         return updated;
       });
-      
+
       // Add to completed
       setCompletedTasks(prev => [result, ...prev.slice(0, 9)]);
-      
+
       // Set as last result
       setLastResult(result);
-      
+
       // Update loading state
       const actionKey = mapTypeToKey(result.type);
       setLoading(prev => ({ ...prev, [actionKey]: false }));
@@ -91,10 +91,10 @@ export function useTesterAgent() {
   const spawnTester = useCallback(async (action, projectName) => {
     const endpoint = `/api/tester/${action}`;
     const actionKey = mapActionToKey(action);
-    
+
     setLoading(prev => ({ ...prev, [actionKey]: true }));
     setError(null);
-    
+
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
@@ -103,13 +103,13 @@ export function useTesterAgent() {
         },
         body: JSON.stringify({ projectName }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || `Failed to ${action}`);
       }
-      
+
       // Store task ID for tracking
       if (data.taskId) {
         setPendingTasks(prev => ({
@@ -120,11 +120,11 @@ export function useTesterAgent() {
             projectName,
             status: 'pending',
             progress: 0,
-            message: 'Task initiated...'
-          }
+            message: 'Task initiated...',
+          },
         }));
       }
-      
+
       return data;
     } catch (err) {
       setError(err.message);
@@ -133,21 +133,30 @@ export function useTesterAgent() {
     }
   }, []);
 
-  const createTests = useCallback((projectName) => {
-    return spawnTester('create-tests', projectName);
-  }, [spawnTester]);
+  const createTests = useCallback(
+    projectName => {
+      return spawnTester('create-tests', projectName);
+    },
+    [spawnTester]
+  );
 
-  const runTests = useCallback((projectName) => {
-    return spawnTester('run-tests', projectName);
-  }, [spawnTester]);
+  const runTests = useCallback(
+    projectName => {
+      return spawnTester('run-tests', projectName);
+    },
+    [spawnTester]
+  );
 
-  const generateReport = useCallback((projectName) => {
-    return spawnTester('generate-report', projectName);
-  }, [spawnTester]);
+  const generateReport = useCallback(
+    projectName => {
+      return spawnTester('generate-report', projectName);
+    },
+    [spawnTester]
+  );
 
   const clearError = useCallback(() => setError(null), []);
   const clearResult = useCallback(() => setLastResult(null), []);
-  const dismissTask = useCallback((taskId) => {
+  const dismissTask = useCallback(taskId => {
     setCompletedTasks(prev => prev.filter(t => t.taskId !== taskId));
   }, []);
 

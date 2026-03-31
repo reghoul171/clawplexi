@@ -10,16 +10,14 @@ function HeroSection({ projectName, projectDescription, repositoryUrl, editorUse
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="flex-1">
           <h2 className="text-2xl font-bold text-white">{projectName}</h2>
-          <p className="mt-2 text-gray-400 text-sm leading-relaxed">
-            {projectDescription}
-          </p>
+          <p className="mt-2 text-gray-400 text-sm leading-relaxed">{projectDescription}</p>
         </div>
-        
+
         <div className="flex flex-col items-start md:items-end gap-2">
           <span className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
             {editorUsed}
           </span>
-          
+
           {repositoryUrl && (
             <a
               href={repositoryUrl}

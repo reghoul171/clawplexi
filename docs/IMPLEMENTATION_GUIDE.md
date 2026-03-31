@@ -53,14 +53,14 @@ node backend/server.js
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PM_DASHBOARD_PORT` | Server port | 3001 |
-| `PM_DASHBOARD_HOST` | Server host | localhost |
-| `PM_DASHBOARD_PROJECTS_DIR` | Projects directory | `~/.openclaw/shared-project` |
-| `PM_DASHBOARD_STATE_FILE` | SQLite database path | `~/.openclaw/pm-dashboard/state.db` |
-| `PM_DASHBOARD_SYNC_ENABLED` | Enable Git sync | true |
-| `PM_DASHBOARD_CONFIG_FILE` | Custom config path | `~/.openclaw/pm-dashboard/config.json` |
+| Variable                    | Description          | Default                                |
+| --------------------------- | -------------------- | -------------------------------------- |
+| `PM_DASHBOARD_PORT`         | Server port          | 3001                                   |
+| `PM_DASHBOARD_HOST`         | Server host          | localhost                              |
+| `PM_DASHBOARD_PROJECTS_DIR` | Projects directory   | `~/.openclaw/shared-project`           |
+| `PM_DASHBOARD_STATE_FILE`   | SQLite database path | `~/.openclaw/pm-dashboard/state.db`    |
+| `PM_DASHBOARD_SYNC_ENABLED` | Enable Git sync      | true                                   |
+| `PM_DASHBOARD_CONFIG_FILE`  | Custom config path   | `~/.openclaw/pm-dashboard/config.json` |
 
 ### CLI Commands
 
@@ -89,6 +89,7 @@ pm-dashboard migrate clone git@github.com:user/pm-state.git
 ### Method 1: Git Sync (Recommended)
 
 **On Source Machine:**
+
 ```bash
 # Initialize Git sync
 pm-dashboard init --remote git@github.com:yourname/pm-dashboard-state.git
@@ -98,6 +99,7 @@ pm-dashboard sync
 ```
 
 **On Target Machine:**
+
 ```bash
 # Clone existing state
 pm-dashboard migrate clone git@github.com:yourname/pm-dashboard-state.git
@@ -109,12 +111,14 @@ pm-dashboard start
 ### Method 2: Export/Import
 
 **On Source Machine:**
+
 ```bash
 pm-dashboard export -o dashboard-backup.json
 # Transfer file to target machine
 ```
 
 **On Target Machine:**
+
 ```bash
 pm-dashboard init
 pm-dashboard import dashboard-backup.json
@@ -167,21 +171,25 @@ openclaw-pm-dashboard/
 ## Key Features
 
 ### 1. Persistent State
+
 - SQLite database stores all project states
 - Survives server restarts
 - No data loss on restart
 
 ### 2. Git Synchronization
+
 - Automatic commit/push of state changes
 - Pull changes from other machines
 - Conflict resolution based on timestamps
 
 ### 3. Zero Hardcoded Paths
+
 - All paths resolved from config or environment
 - Portable across machines
 - Works in any environment
 
 ### 4. OpenClaw Integration
+
 - Detects OpenClaw environment automatically
 - Uses `~/.openclaw/shared-project` by default
 - Integrates with OpenClaw gateway for agent spawning
@@ -189,6 +197,7 @@ openclaw-pm-dashboard/
 ## Troubleshooting
 
 ### Database locked
+
 ```bash
 # Stop server first
 pm-dashboard stop
@@ -198,6 +207,7 @@ lsof ~/.openclaw/pm-dashboard/state.db
 ```
 
 ### Sync conflicts
+
 ```bash
 # Check status
 pm-dashboard status
@@ -209,6 +219,7 @@ git mergetool
 ```
 
 ### Projects not appearing
+
 ```bash
 # Check projects directory
 pm-dashboard config get paths.projectsDir
@@ -220,6 +231,7 @@ ls ~/.openclaw/shared-project/*/.project_state.json
 ## Next Steps
 
 1. **Test the implementation:**
+
    ```bash
    cd /home/reghoul/openclaw-pm-dashboard
    node backend/bin/pm-dashboard.js init
@@ -227,6 +239,7 @@ ls ~/.openclaw/shared-project/*/.project_state.json
    ```
 
 2. **Set up Git sync (optional):**
+
    ```bash
    # Create a private repo for state storage
    # Then initialize with remote

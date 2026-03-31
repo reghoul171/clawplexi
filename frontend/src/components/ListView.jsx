@@ -15,15 +15,11 @@ function ListView({ project }) {
   const normalizedProject = useMemo(() => normalizeProject(project), [project]);
 
   if (!normalizedProject) {
-    return (
-      <div className="text-center text-gray-400 py-12">
-        No project data available
-      </div>
-    );
+    return <div className="text-center text-gray-400 py-12">No project data available</div>;
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="list-view">
       {/* Overview Section - Default expanded */}
       <CollapsibleSection
         id="list-overview"

@@ -6,6 +6,12 @@ frontend/node_modules/
 # Build outputs
 frontend/dist/
 
+# Test coverage
+coverage/
+backend/coverage/
+frontend/coverage/
+*.lcov
+
 # Environment files
 .env
 .env.local

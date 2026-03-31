@@ -4,21 +4,21 @@ import SpaceSection from './SpaceSection';
 import SidebarFooter from './SidebarFooter';
 import { transformToWorkspace } from '../../utils/transformProjects';
 
-function Sidebar({ projects, activeProject, onSelectProject, connected }) {
+function Sidebar({ projects, activeProject, onSelectProject, connected, onViewChange }) {
   // State for workspace collapse
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
-  
+
   // State for expanded spaces (store space IDs)
   const [expandedSpaces, setExpandedSpaces] = useState(() => new Set());
-  
+
   // Transform projects into workspace structure
   const workspace = useMemo(() => transformToWorkspace(projects), [projects]);
-  
+
   // Determine active list ID from active project
   const activeListId = activeProject ? `impl-${activeProject.project_name}` : null;
-  
+
   // Toggle space expansion
-  const toggleSpace = (spaceId) => {
+  const toggleSpace = spaceId => {
     setExpandedSpaces(prev => {
       const next = new Set(prev);
       if (next.has(spaceId)) {
@@ -29,19 +29,29 @@ function Sidebar({ projects, activeProject, onSelectProject, connected }) {
       return next;
     });
   };
-  
-  // Handle list selection
-  const handleSelectList = (list) => {
+
+  // Handle list selection - switches both project and view
+  const handleSelectList = list => {
     if (list.project) {
       onSelectProject(list.project);
     }
+    // Switch view based on list ID prefix
+    if (onViewChange && list.id) {
+      if (list.id.startsWith('tests-')) {
+        onViewChange('tests');
+      } else if (list.id.startsWith('impl-')) {
+        onViewChange('board');
+      } else if (list.id.startsWith('decisions-')) {
+        onViewChange('list');
+      }
+    }
   };
-  
+
   // Toggle workspace collapse
   const toggleWorkspace = () => {
     setWorkspaceCollapsed(prev => !prev);
   };
-  
+
   return (
     <aside className="w-72 bg-gray-800 border-r border-gray-700 flex flex-col">
       {/* Workspace header */}
@@ -53,9 +63,9 @@ function Sidebar({ projects, activeProject, onSelectProject, connected }) {
         activeCount={workspace.activeProjects}
         completedCount={workspace.completedProjects}
       />
-      
+
       {/* Spaces and lists (collapsible) */}
-      <div 
+      <div
         className={`flex-1 overflow-y-auto transition-all duration-200 ${
           workspaceCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
@@ -82,7 +92,7 @@ function Sidebar({ projects, activeProject, onSelectProject, connected }) {
           </div>
         )}
       </div>
-      
+
       {/* Footer with connection status */}
       <SidebarFooter connected={connected} />
     </aside>

@@ -1,0 +1,15 @@
+{
+  "extends": ["../.eslintrc.json", "plugin:react/recommended", "plugin:react-hooks/recommended"],
+  "env": {
+    "browser": true
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "rules": {
+    "react/prop-types": "warn",
+    "react/react-in-jsx-scope": "off"
+  }
+}

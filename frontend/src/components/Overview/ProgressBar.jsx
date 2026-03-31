@@ -18,7 +18,9 @@ function ProgressBar({ percentage, completedSteps, totalSteps }) {
           />
         </div>
         <div className="flex justify-between text-sm text-gray-400">
-          <span>{completedSteps} of {totalSteps} steps completed</span>
+          <span>
+            {completedSteps} of {totalSteps} steps completed
+          </span>
         </div>
       </div>
     </section>

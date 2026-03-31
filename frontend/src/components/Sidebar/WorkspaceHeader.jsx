@@ -1,12 +1,12 @@
 import { Building2, ChevronDown, ChevronRight, Settings, FolderKanban } from 'lucide-react';
 
-function WorkspaceHeader({ 
-  workspaceName, 
-  isCollapsed, 
-  onToggle, 
+function WorkspaceHeader({
+  workspaceName,
+  isCollapsed,
+  onToggle,
   projectCount,
   activeCount,
-  completedCount 
+  completedCount,
 }) {
   return (
     <div className="border-b border-gray-700">
@@ -18,16 +18,14 @@ function WorkspaceHeader({
         <div className="p-1.5 bg-purple-500/20 rounded-lg">
           <Building2 className="w-5 h-5 text-purple-400" />
         </div>
-        
+
         <div className="flex-1 text-left">
-          <h2 className="text-sm font-semibold text-white">
-            {workspaceName}
-          </h2>
+          <h2 className="text-sm font-semibold text-white">{workspaceName}</h2>
           <p className="text-xs text-gray-400">
             {activeCount} active · {completedCount} done
           </p>
         </div>
-        
+
         <div className="flex items-center gap-1">
           <span className="text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded-full">
             {projectCount}
@@ -39,7 +37,7 @@ function WorkspaceHeader({
           )}
         </div>
       </button>
-      
+
       {/* Expanded stats */}
       {!isCollapsed && (
         <div className="px-3 pb-3 flex gap-2">

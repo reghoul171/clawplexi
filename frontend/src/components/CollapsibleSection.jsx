@@ -4,7 +4,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 /**
  * Reusable collapsible section component.
  * Supports localStorage persistence for expanded state.
- * 
+ *
  * @param {string} id - Unique identifier for localStorage persistence
  * @param {string} title - Section title
  * @param {ReactNode} icon - Optional icon to display before title
@@ -12,13 +12,13 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
  * @param {ReactNode} children - Content to show when expanded
  * @param {string} className - Additional CSS classes
  */
-function CollapsibleSection({ 
-  id, 
-  title, 
-  icon, 
-  defaultExpanded = false, 
-  children, 
-  className = '' 
+function CollapsibleSection({
+  id,
+  title,
+  icon,
+  defaultExpanded = false,
+  children,
+  className = '',
 }) {
   // Initialize from localStorage or default
   const [isExpanded, setIsExpanded] = useState(() => {
@@ -54,24 +54,18 @@ function CollapsibleSection({
           <h3 className="text-lg font-semibold text-white">{title}</h3>
         </div>
         <div className="text-gray-400 transition-transform duration-200">
-          {isExpanded ? (
-            <ChevronDown className="w-5 h-5" />
-          ) : (
-            <ChevronRight className="w-5 h-5" />
-          )}
+          {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </div>
       </button>
 
       {/* Content - Animated */}
-      <div 
+      <div
         className={`
           overflow-hidden transition-all duration-300 ease-in-out
           ${isExpanded ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'}
         `}
       >
-        <div className="px-6 pb-6 border-t border-gray-700">
-          {children}
-        </div>
+        <div className="px-6 pb-6 border-t border-gray-700">{children}</div>
       </div>
     </div>
   );

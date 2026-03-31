@@ -23,10 +23,13 @@ A real-time dashboard for visualizing project states maintained by AI agents. Bu
 The Overview tab provides a comprehensive project dashboard with the following sections:
 
 ### Hero Section
+
 Displays the project name, description, and a link to the repository (if configured).
 
 ### Stats Grid
+
 Six key metrics displayed in a grid layout:
+
 - **Team Size** - Number of team members
 - **Lines of Code** - Project size metric
 - **Start Date** - When the project began
@@ -35,23 +38,26 @@ Six key metrics displayed in a grid layout:
 - **Current Phase** - Auto-calculated development phase
 
 ### Tech Stack Badges
+
 Color-coded technology badges showing the project's tech stack. Supports common technologies with distinct colors for easy identification.
 
 ### System Architecture Diagram
+
 A Mermaid.js graph visualization showing the project's technical architecture derived from the `decision_tree`. Decisions are automatically grouped into architectural layers based on their `node_id` prefix:
 
-| Prefix | Layer | Description |
-|--------|-------|-------------|
-| `SEC-*` | Security | Security-related decisions (authentication, authorization, encryption) |
-| `AUTH-*` | Security | Authentication and authorization decisions |
-| `TECH-*` | Data | Technology and data layer decisions |
-| `DB-*` | Data | Database and storage decisions |
-| `API-*` | API | API design and endpoint decisions |
-| `ARCH-*` | Architecture | Core architectural patterns and structure |
-| `DEPLOY-*` | Infrastructure | Deployment and DevOps decisions |
-| `INFRA-*` | Infrastructure | Infrastructure and cloud resources |
+| Prefix     | Layer          | Description                                                            |
+| ---------- | -------------- | ---------------------------------------------------------------------- |
+| `SEC-*`    | Security       | Security-related decisions (authentication, authorization, encryption) |
+| `AUTH-*`   | Security       | Authentication and authorization decisions                             |
+| `TECH-*`   | Data           | Technology and data layer decisions                                    |
+| `DB-*`     | Data           | Database and storage decisions                                         |
+| `API-*`    | API            | API design and endpoint decisions                                      |
+| `ARCH-*`   | Architecture   | Core architectural patterns and structure                              |
+| `DEPLOY-*` | Infrastructure | Deployment and DevOps decisions                                        |
+| `INFRA-*`  | Infrastructure | Infrastructure and cloud resources                                     |
 
 The diagram renders as a top-to-bottom flow (`graph TB`) with nodes styled by layer:
+
 - **Security Layer** (red) - Top of diagram
 - **Data Layer** (blue) - Data storage and technology
 - **API Layer** (green) - Interface definitions
@@ -61,7 +67,9 @@ The diagram renders as a top-to-bottom flow (`graph TB`) with nodes styled by la
 If no decision tree data is available, the component falls back to rendering a tech stack diagram or displays a placeholder.
 
 ### Quick Stats
+
 Shows counts of implementation tasks:
+
 - ✅ Completed tasks
 - 🔄 In-progress tasks
 - ⏳ Pending tasks
@@ -83,30 +91,32 @@ Workspace
 └── ...
 ```
 
-| Level | Description |
-|-------|-------------|
-| **Workspace** | Top-level container showing all projects with aggregate stats |
-| **Space** | Each project becomes a collapsible space with its own icon and color |
-| **List** | Navigation items within a space (Implementation, Tests, Decisions) |
+| Level         | Description                                                          |
+| ------------- | -------------------------------------------------------------------- |
+| **Workspace** | Top-level container showing all projects with aggregate stats        |
+| **Space**     | Each project becomes a collapsible space with its own icon and color |
+| **List**      | Navigation items within a space (Implementation, Tests, Decisions)   |
 
 ### Components
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| `Sidebar` | `frontend/src/components/Sidebar/index.jsx` | Main container orchestrating all sidebar components |
-| `WorkspaceHeader` | `frontend/src/components/Sidebar/WorkspaceHeader.jsx` | Collapsible header with workspace stats (total/active/completed projects) |
-| `SpaceSection` | `frontend/src/components/Sidebar/SpaceSection.jsx` | Collapsible project group with chevron toggle |
-| `ListTree` | `frontend/src/components/Sidebar/ListTree.jsx` | Navigation items with status indicators and progress bars |
-| `SidebarFooter` | `frontend/src/components/Sidebar/SidebarFooter.jsx` | WebSocket connection status indicator |
-| `transformToWorkspace` | `frontend/src/utils/transformProjects.js` | Utility transforming flat project list into hierarchy |
+| Component              | File                                                  | Purpose                                                                   |
+| ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------- |
+| `Sidebar`              | `frontend/src/components/Sidebar/index.jsx`           | Main container orchestrating all sidebar components                       |
+| `WorkspaceHeader`      | `frontend/src/components/Sidebar/WorkspaceHeader.jsx` | Collapsible header with workspace stats (total/active/completed projects) |
+| `SpaceSection`         | `frontend/src/components/Sidebar/SpaceSection.jsx`    | Collapsible project group with chevron toggle                             |
+| `ListTree`             | `frontend/src/components/Sidebar/ListTree.jsx`        | Navigation items with status indicators and progress bars                 |
+| `SidebarFooter`        | `frontend/src/components/Sidebar/SidebarFooter.jsx`   | WebSocket connection status indicator                                     |
+| `transformToWorkspace` | `frontend/src/utils/transformProjects.js`             | Utility transforming flat project list into hierarchy                     |
 
 ### Features
 
 #### Collapsible Sections
+
 - **Workspace Header**: Click to collapse/expand entire sidebar content
 - **Space Sections**: Click chevron to expand/collapse individual projects
 
 #### Status Indicators
+
 Each list item displays a color-coded status:
 | Status | Color | Condition |
 |--------|-------|-----------|
@@ -115,11 +125,13 @@ Each list item displays a color-coded status:
 | Pending | Gray | Progress = 0% |
 
 #### Progress Bars
+
 - Visual progress bar on each list item
 - Shows completion percentage relative to total items
 - Animated fill for smooth updates
 
 #### Real-time Updates
+
 - Sidebar reflects project changes instantly via WebSocket
 - Connection status shown in footer (green = connected, red = disconnected)
 
@@ -158,6 +170,7 @@ The `transformToWorkspace` utility converts flat project data into the sidebar h
 ### Design Philosophy
 
 The sidebar follows ClickUp's design patterns:
+
 - Clean, minimal interface with dark theme
 - Intuitive collapse/expand interactions
 - Clear visual hierarchy with indentation
@@ -169,12 +182,12 @@ The dashboard features a view switcher in the header that allows switching betwe
 
 ### Available Views
 
-| View | Icon | Description | Keyboard Shortcut |
-|------|------|-------------|-------------------|
-| **List** | 📋 | Comprehensive list view with collapsible sections | `Alt+1` |
-| **Board** | 📊 | Kanban-style board view | `Alt+2` |
-| **Timeline** | 📅 | Timeline visualization | `Alt+3` |
-| **Tests** | 🧪 | Test results dashboard | `Alt+4` |
+| View         | Icon | Description                                       | Keyboard Shortcut |
+| ------------ | ---- | ------------------------------------------------- | ----------------- |
+| **List**     | 📋   | Comprehensive list view with collapsible sections | `Alt+1`           |
+| **Board**    | 📊   | Kanban-style board view                           | `Alt+2`           |
+| **Timeline** | 📅   | Timeline visualization                            | `Alt+3`           |
+| **Tests**    | 🧪   | Test results dashboard                            | `Alt+4`           |
 
 ### View Persistence
 
@@ -182,23 +195,23 @@ The active view is automatically saved to `localStorage` and restored on page re
 
 ### Components
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| `ViewSwitcher` | `frontend/src/components/ViewSwitcher.jsx` | Icon button group for view selection |
-| `ListView` | `frontend/src/components/ListView.jsx` | Merged view with collapsible sections |
-| `BoardView` | `frontend/src/components/BoardView.jsx` | Kanban board (Phase 3 placeholder) |
-| `TimelineView` | `frontend/src/components/TimelineView.jsx` | Timeline visualization (Phase 3 placeholder) |
-| `CollapsibleSection` | `frontend/src/components/CollapsibleSection.jsx` | Reusable animated collapsible wrapper |
+| Component            | File                                             | Purpose                                      |
+| -------------------- | ------------------------------------------------ | -------------------------------------------- |
+| `ViewSwitcher`       | `frontend/src/components/ViewSwitcher.jsx`       | Icon button group for view selection         |
+| `ListView`           | `frontend/src/components/ListView.jsx`           | Merged view with collapsible sections        |
+| `BoardView`          | `frontend/src/components/BoardView.jsx`          | Kanban board (Phase 3 placeholder)           |
+| `TimelineView`       | `frontend/src/components/TimelineView.jsx`       | Timeline visualization (Phase 3 placeholder) |
+| `CollapsibleSection` | `frontend/src/components/CollapsibleSection.jsx` | Reusable animated collapsible wrapper        |
 
 ### ListView Sections
 
 The ListView consolidates the previous Overview tab content and decision tree into a single scrollable view with collapsible sections:
 
-| Section | Content |
-|---------|---------|
-| **Overview** | Hero section, stats grid, tech stack badges, system architecture diagram |
-| **Decision Tree** | Mermaid.js visualization of architecture decisions |
-| **Implementation** | Implementation plan with step-by-step progress tracking |
+| Section            | Content                                                                  |
+| ------------------ | ------------------------------------------------------------------------ |
+| **Overview**       | Hero section, stats grid, tech stack badges, system architecture diagram |
+| **Decision Tree**  | Mermaid.js visualization of architecture decisions                       |
+| **Implementation** | Implementation plan with step-by-step progress tracking                  |
 
 Each section can be collapsed/expanded by clicking the section header. The collapsible state is managed internally with smooth CSS transitions.
 
@@ -229,6 +242,7 @@ The Board and Timeline views currently display placeholder content indicating th
 ### Header Layout
 
 The header now uses a three-zone layout:
+
 1. **Left**: Project selector / title
 2. **Center**: ViewSwitcher component
 3. **Right**: User actions / settings
@@ -236,6 +250,7 @@ The header now uses a three-zone layout:
 ### Keyboard Navigation
 
 Power users can quickly switch views using keyboard shortcuts:
+
 - Press `Alt+1` for List view
 - Press `Alt+2` for Board view
 - Press `Alt+3` for Timeline view
@@ -277,11 +292,11 @@ The dashboard supports access via tunnel services like Cloudflare Tunnel, ngrok,
 
 ### Supported Tunnel Services
 
-| Service | Pattern | Notes |
-|---------|---------|-------|
-| Cloudflare Tunnel | `*.trycloudflare.com` | Recommended - fast and reliable |
-| ngrok | `*.ngrok.io`, `*.ngrok-free.app` | Popular option |
-| localtunnel | `*.loca.lt` | Free and simple |
+| Service           | Pattern                          | Notes                           |
+| ----------------- | -------------------------------- | ------------------------------- |
+| Cloudflare Tunnel | `*.trycloudflare.com`            | Recommended - fast and reliable |
+| ngrok             | `*.ngrok.io`, `*.ngrok-free.app` | Popular option                  |
+| localtunnel       | `*.loca.lt`                      | Free and simple                 |
 
 ### Setup Instructions
 
@@ -324,7 +339,7 @@ VITE_API_URL=https://your-backend-tunnel.ngrok.io npm run dev
 The backend automatically accepts requests from these origin patterns (configured in `backend/lib/config.js`):
 
 ```javascript
-corsOriginPatterns: ['.trycloudflare.com', '.loca.lt', '.ngrok.io', '.ngrok-free.app']
+corsOriginPatterns: ['.trycloudflare.com', '.loca.lt', '.ngrok.io', '.ngrok-free.app'];
 ```
 
 To add custom tunnel domains, set the environment variable:
@@ -353,7 +368,7 @@ The dashboard includes several features for reliable tunnel operation:
    ```javascript
    // frontend/vite.config.js
    server: {
-     allowedHosts: ['.trycloudflare.com']
+     allowedHosts: ['.trycloudflare.com'];
    }
    ```
 
@@ -392,31 +407,124 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for full CLI reference.
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PM_DASHBOARD_PORT` | 3001 | Server port |
-| `PM_DASHBOARD_PROJECTS_DIR` | `~/.openclaw/shared-project` | Projects directory |
-| `PM_DASHBOARD_STATE_FILE` | `~/.openclaw/pm-dashboard/state.db` | SQLite database path |
-| `PM_DASHBOARD_SYNC_ENABLED` | true | Enable Git sync |
+| Variable                    | Default                             | Description          |
+| --------------------------- | ----------------------------------- | -------------------- |
+| `PM_DASHBOARD_PORT`         | 3001                                | Server port          |
+| `PM_DASHBOARD_PROJECTS_DIR` | `~/.openclaw/shared-project`        | Projects directory   |
+| `PM_DASHBOARD_STATE_FILE`   | `~/.openclaw/pm-dashboard/state.db` | SQLite database path |
+| `PM_DASHBOARD_SYNC_ENABLED` | true                                | Enable Git sync      |
 
 ## How It Works
 
 ### Architecture
 
+The backend follows a clean **Service Layer Architecture** with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                          HTTP Request                            │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Routes (API Endpoints)                       │
+│              routes/projects.routes.js, etc.                     │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Controllers (HTTP Handlers)                   │
+│           controllers/projects.controller.js, etc.               │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Services (Business Logic)                   │
+│           services/project.service.js, sync.service.js           │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   Repositories (Data Access)                     │
+│          repositories/project.repository.js, etc.                │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     SQLite Database                              │
+│              lib/database/ (modular) + state.db                  │
+│  ┌─────────────┬─────────────┬─────────────┬─────────────────┐  │
+│  │ connection  │   schema    │  repository │   statistics    │  │
+│  │ lifecycle   │  migrations │   CRUD ops  │  export/import  │  │
+│  └─────────────┴─────────────┴─────────────┴─────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Directory Structure
+
 ```
 openclaw-pm-dashboard/
-├── backend/                 # Node.js + Express + Socket.io server
-│   ├── server.js           # Main server with chokidar file watcher
-│   └── package.json
-├── frontend/               # React + Vite + Tailwind dashboard
+├── backend/                     # Node.js + Express + Socket.io server
+│   ├── server.js               # Entry point (initialization, shutdown)
+│   ├── app.js                  # Express application factory
+│   ├── routes/                 # API route definitions
+│   │   ├── index.js           # Route aggregator
+│   │   ├── projects.routes.js # Project endpoints
+│   │   ├── sync.routes.js     # Sync endpoints
+│   │   └── tasks.routes.js    # Task endpoints
+│   ├── controllers/            # HTTP request handlers
+│   │   ├── projects.controller.js
+│   │   ├── sync.controller.js
+│   │   └── tasks.controller.js
+│   ├── services/               # Business logic layer
+│   │   ├── project.service.js
+│   │   ├── sync.service.js
+│   │   ├── task.service.js
+│   │   ├── fileWatcher.service.js
+│   │   └── tester.service.js
+│   ├── repositories/           # Data access layer
+│   │   ├── project.repository.js
+│   │   ├── sync.repository.js
+│   │   └── task.repository.js
+│   ├── middleware/             # Express middleware
+│   │   ├── error.middleware.js
+│   │   ├── cors.middleware.js
+│   │   └── logging.middleware.js
+│   ├── websocket/              # Socket.io handlers
+│   │   ├── index.js
+│   │   └── handlers/
+│   ├── lib/                    # Core libraries
+│   │   ├── config.js          # Configuration management
+│   │   ├── database.js        # SQLite persistence (entry point)
+│   │   ├── database/          # Modular database components
+│   │   │   ├── index.js       # Main exports (backward compatible)
+│   │   │   ├── connection.js  # DB lifecycle & migrations
+│   │   │   ├── schema.js      # Table definitions & indexes
+│   │   │   ├── repository/    # Data access layer
+│   │   │   │   ├── projects.js # Project CRUD
+│   │   │   │   ├── tasks.js   # Task operations
+│   │   │   │   └── sync.js    # Sync state
+│   │   │   ├── utils/         # Query utilities
+│   │   │   │   └── query.js   # Promise wrappers
+│   │   │   └── statistics.js  # Stats & export/import
+│   │   ├── paths.js           # Path resolution
+│   │   └── sync.js            # Git synchronization
+│   ├── bin/                    # CLI tools
+│   │   └── pm-dashboard.js
+│   └── __tests__/              # Test suites
+├── frontend/                   # React + Vite + Tailwind dashboard
 │   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── App.jsx        # Main app with WebSocket integration
+│   │   ├── components/         # React components
+│   │   ├── App.jsx            # Main app with WebSocket integration
 │   │   └── main.jsx
 │   └── package.json
-├── mock_workspace/         # Sample project data
+├── mock_workspace/             # Sample project data
 │   └── ProjectAlpha/
 │       └── .project_state.json
+├── docs/                       # Documentation
+│   ├── ARCHITECTURE.md        # Detailed architecture guide
+│   ├── PORTABLE_ARCHITECTURE.md
+│   └── IMPLEMENTATION_GUIDE.md
 ├── docker-compose.yml
 └── .env
 ```
@@ -495,9 +603,9 @@ The following optional fields enhance the Overview tab display:
   "lines_of_code": 12500,
   "start_date": "2025-01-15",
   "implementation_plan": [
-    {"step": "1", "task": "Initialize project", "status": "done"},
-    {"step": "2", "task": "Build core features", "status": "in_progress"},
-    {"step": "3", "task": "Add testing", "status": "pending"}
+    { "step": "1", "task": "Initialize project", "status": "done" },
+    { "step": "2", "task": "Build core features", "status": "in_progress" },
+    { "step": "3", "task": "Add testing", "status": "pending" }
   ],
   "decision_tree": [],
   "tests_generated": []
@@ -506,20 +614,20 @@ The following optional fields enhance the Overview tab display:
 
 ### Field Descriptions
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `project_name` | String | Yes | Unique identifier for the project |
-| `editor_used` | String | Yes | The editor/IDE being used (displayed as a badge) |
-| `progress_percentage` | Number | Yes | Overall completion percentage (0-100) |
-| `implementation_plan` | Array | Yes | List of implementation steps with status |
-| `decision_tree` | Array | Yes | Architecture/tech decisions made during development |
-| `tests_generated` | Array | Yes | Generated tests and their current status |
-| `project_description` | String | No | Brief description shown in Hero section |
-| `repository_url` | String | No | Link to GitHub or other repository |
-| `tech_stack` | Array[String] | No | List of technologies for badge display |
-| `team_size` | Number | No | Number of team members |
-| `lines_of_code` | Number | No | Project size metric |
-| `start_date` | String | No | ISO date for calculating days active and current phase |
+| Field                 | Type          | Required | Description                                            |
+| --------------------- | ------------- | -------- | ------------------------------------------------------ |
+| `project_name`        | String        | Yes      | Unique identifier for the project                      |
+| `editor_used`         | String        | Yes      | The editor/IDE being used (displayed as a badge)       |
+| `progress_percentage` | Number        | Yes      | Overall completion percentage (0-100)                  |
+| `implementation_plan` | Array         | Yes      | List of implementation steps with status               |
+| `decision_tree`       | Array         | Yes      | Architecture/tech decisions made during development    |
+| `tests_generated`     | Array         | Yes      | Generated tests and their current status               |
+| `project_description` | String        | No       | Brief description shown in Hero section                |
+| `repository_url`      | String        | No       | Link to GitHub or other repository                     |
+| `tech_stack`          | Array[String] | No       | List of technologies for badge display                 |
+| `team_size`           | Number        | No       | Number of team members                                 |
+| `lines_of_code`       | Number        | No       | Project size metric                                    |
+| `start_date`          | String        | No       | ISO date for calculating days active and current phase |
 
 ### Backward Compatibility
 
@@ -562,14 +670,14 @@ The Client agent is a **misuse specialist** that validates the dashboard:
 
 After the tunnel compatibility implementation, the Client agent performed comprehensive testing:
 
-| Test Category | Status | Notes |
-|--------------|--------|-------|
-| Real-time Updates | ✅ Pass | WebSocket updates via tunnel with polling fallback |
-| CORS Validation | ✅ Pass | Tunnel URLs properly accepted |
-| Error Handling | ✅ Pass | No stack traces exposed |
-| Input Validation | ✅ Pass | Empty names and invalid statuses rejected |
-| API Endpoints | ✅ Pass | All endpoints responding correctly |
-| Tunnel Compatibility | ✅ Pass | Full functionality through Cloudflare tunnel |
+| Test Category        | Status  | Notes                                              |
+| -------------------- | ------- | -------------------------------------------------- |
+| Real-time Updates    | ✅ Pass | WebSocket updates via tunnel with polling fallback |
+| CORS Validation      | ✅ Pass | Tunnel URLs properly accepted                      |
+| Error Handling       | ✅ Pass | No stack traces exposed                            |
+| Input Validation     | ✅ Pass | Empty names and invalid statuses rejected          |
+| API Endpoints        | ✅ Pass | All endpoints responding correctly                 |
+| Tunnel Compatibility | ✅ Pass | Full functionality through Cloudflare tunnel       |
 
 ### Tester Agent Integration
 
@@ -651,22 +759,22 @@ The dashboard will automatically detect the new project and display it.
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/projects` | GET | List all tracked projects |
-| `/api/projects/:name` | GET | Get a specific project by name |
-| `/api/projects/:name/steps/:stepNumber/status` | PATCH, PUT | Update step status (supports both methods) |
-| `/api/health` | GET | Health check endpoint |
-| `/api/stats` | GET | Dashboard statistics |
-| `/api/sync/status` | GET | Git sync status |
-| `/api/sync/trigger` | POST | Manually trigger git sync |
-| `/api/tasks` | GET | List tasks (optional `?projectName=` and `?status=` filters) |
-| `/api/tasks/:taskId` | GET | Get specific task details |
-| `/api/tasks/:taskId/progress` | POST | Update task progress (for agent integration) |
-| `/api/tasks/:taskId/complete` | POST | Mark task complete (for agent integration) |
-| `/api/tester/create-tests` | POST | Spawn tester agent to create tests |
-| `/api/tester/run-tests` | POST | Run all tests for a project |
-| `/api/tester/generate-report` | POST | Generate test report |
+| Endpoint                                       | Method     | Description                                                  |
+| ---------------------------------------------- | ---------- | ------------------------------------------------------------ |
+| `/api/projects`                                | GET        | List all tracked projects                                    |
+| `/api/projects/:name`                          | GET        | Get a specific project by name                               |
+| `/api/projects/:name/steps/:stepNumber/status` | PATCH, PUT | Update step status (supports both methods)                   |
+| `/api/health`                                  | GET        | Health check endpoint                                        |
+| `/api/stats`                                   | GET        | Dashboard statistics                                         |
+| `/api/sync/status`                             | GET        | Git sync status                                              |
+| `/api/sync/trigger`                            | POST       | Manually trigger git sync                                    |
+| `/api/tasks`                                   | GET        | List tasks (optional `?projectName=` and `?status=` filters) |
+| `/api/tasks/:taskId`                           | GET        | Get specific task details                                    |
+| `/api/tasks/:taskId/progress`                  | POST       | Update task progress (for agent integration)                 |
+| `/api/tasks/:taskId/complete`                  | POST       | Mark task complete (for agent integration)                   |
+| `/api/tester/create-tests`                     | POST       | Spawn tester agent to create tests                           |
+| `/api/tester/run-tests`                        | POST       | Run all tests for a project                                  |
+| `/api/tester/generate-report`                  | POST       | Generate test report                                         |
 
 ### Step Status Update
 
@@ -688,11 +796,124 @@ Valid statuses: `pending`, `in_progress`, `done`
 
 ## WebSocket Events
 
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `initial_state` | Server → Client | Sent on connection with all current projects |
-| `project_updated` | Server → Client | Emitted when a project file changes |
-| `project_removed` | Server → Client | Emitted when a project file is deleted |
+| Event             | Direction       | Description                                  |
+| ----------------- | --------------- | -------------------------------------------- |
+| `initial_state`   | Server → Client | Sent on connection with all current projects |
+| `project_updated` | Server → Client | Emitted when a project file changes          |
+| `project_removed` | Server → Client | Emitted when a project file is deleted       |
+
+## Testing
+
+The project includes comprehensive test coverage using modern testing tools.
+
+### Test Stack
+
+| Layer      | Tools                                                    |
+| ---------- | -------------------------------------------------------- |
+| Backend    | Vitest + Supertest (API integration tests)               |
+| Frontend   | Vitest + React Testing Library + @testing-library/jest-dom |
+| Coverage   | v8 coverage provider                                      |
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run backend tests only
+npm run test:backend
+
+# Run frontend tests only
+npm run test:frontend
+
+# Run with coverage
+npm run test:coverage
+
+# Run backend coverage
+npm run test:coverage:backend
+
+# Run frontend coverage
+npm run test:coverage:frontend
+```
+
+### Test Statistics
+
+| Metric          | Backend | Frontend |
+| --------------- | ------- | -------- |
+| Tests           | 131     | 97       |
+| Coverage        | 44.68%  | 24.06%   |
+| Target Coverage | 70%     | 70%      |
+
+### Test Structure
+
+```
+backend/
+└── __tests__/
+    ├── setup.js           # Test environment setup
+    ├── fixtures/          # Test data fixtures
+    ├── helpers/           # Test utilities
+    ├── unit/              # Unit tests
+    │   ├── config.test.js
+    │   ├── database.test.js
+    │   ├── middleware.test.js
+    │   ├── services/
+    │   └── ...
+    └── integration/       # Integration tests
+        └── api.test.js
+
+frontend/
+└── src/
+    └── __tests__/
+        ├── setup.js               # Test environment setup
+        ├── components/            # Component tests
+        │   ├── Sidebar.test.jsx
+        │   ├── Overview.test.jsx
+        │   └── ...
+        ├── hooks/                 # Hook tests
+        ├── utils/                 # Utility tests
+        └── config/                # Config tests
+```
+
+### Coverage Reports
+
+After running `npm run test:coverage`, view detailed reports:
+
+- **HTML Report**: Open `backend/coverage/index.html` or `frontend/coverage/index.html`
+- **JSON Report**: `coverage/coverage-final.json`
+- **Console Summary**: Printed to terminal
+
+### See Also
+
+For detailed testing documentation, see [TESTING.md](TESTING.md).
+
+## Code Quality
+
+### Linting & Formatting
+
+The project uses ESLint and Prettier for code quality:
+
+```bash
+# Lint all code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Check formatting
+npm run format:check
+
+# Format all code
+npm run format
+```
+
+### Pre-commit Hooks
+
+Husky + lint-staged automatically runs on every commit:
+
+- **ESLint**: Checks staged `.js` and `.jsx` files
+- **Prettier**: Formats staged files
+
+This ensures consistent code quality without manual intervention.
 
 ## Development
 
@@ -711,6 +932,7 @@ Simply create a new directory under `mock_workspace/` (or your configured worksp
 ### WebSocket Connection Issues
 
 If the dashboard shows "Disconnected":
+
 - Check that the backend is running on port 3001
 - Verify CORS settings in `backend/server.js`
 - Check browser console for connection errors
@@ -759,10 +981,10 @@ The server uses dynamic CORS origin checking:
 
 ```javascript
 // Exact matches (from config)
-corsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173']
+corsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173'];
 
 // Pattern matches (for tunnels and dynamic URLs)
-corsOriginPatterns: ['.trycloudflare.com', '.ngrok.io', '.loca.lt']
+corsOriginPatterns: ['.trycloudflare.com', '.ngrok.io', '.loca.lt'];
 ```
 
 In development mode, `corsAllowAllInDev: true` allows all origins. Set `NODE_ENV=production` to enforce strict origin checking.
@@ -770,6 +992,7 @@ In development mode, `corsAllowAllInDev: true` allows all origins. Set `NODE_ENV
 ## Documentation
 
 - **[Architecture Guide](docs/ARCHITECTURE.md)** - Comprehensive documentation of the portable architecture, configuration, database schema, CLI reference, and migration guide
+- **[Database Module API](docs/DATABASE_MODULE.md)** - Detailed API reference for the modular database layer
 - **[Portable Architecture Design](docs/PORTABLE_ARCHITECTURE.md)** - Design decisions and detailed architecture specification
 - **[Implementation Guide](docs/IMPLEMENTATION_GUIDE.md)** - Step-by-step implementation walkthrough
 
@@ -779,24 +1002,66 @@ MIT
 
 ## Changelog
 
+### v1.2.0 (2026-03-31)
+
+#### Phase 3b - Database Module Refactoring
+
+- Split monolithic `lib/database.js` into modular `lib/database/` directory structure
+- Created `connection.js` for database lifecycle management (init, close, migrations)
+- Created `schema.js` for SQL schema definitions and migration management
+- Created `repository/` subdirectory with dedicated data access modules:
+  - `projects.js` - Project CRUD operations
+  - `tasks.js` - Task management operations
+  - `sync.js` - Sync state tracking
+- Created `utils/query.js` for promise-wrapped SQLite operations
+- Created `statistics.js` for statistics, export, and import operations
+- Added backward-compatible wrapper at `lib/database.js` for seamless migration
+- Updated README.md and ARCHITECTURE.md with new module structure
+- Added `docs/DATABASE_MODULE.md` with complete API reference
+
+### v1.1.0 (2026-03-31)
+
+#### Phase 1 - Code Quality Tooling
+
+- Added ESLint configuration (`.eslintrc.json`) with ES2022 support
+- Added Prettier configuration (`.prettierrc`, `.prettierignore`)
+- Implemented Husky pre-commit hooks for automated quality checks
+- Configured lint-staged for staged file linting and formatting
+- Added npm scripts: `lint`, `lint:fix`, `format`, `format:check`
+
+#### Phase 2 - Test Infrastructure
+
+- Integrated Vitest as the primary test framework
+- Added React Testing Library for frontend component tests
+- Added Supertest for backend API integration tests
+- Created 228 total tests (131 backend, 97 frontend)
+- Achieved initial coverage: Backend 44.68%, Frontend 24.06%
+- Created comprehensive test structure with unit and integration tests
+- Bug fix: Overview.jsx now handles null project data gracefully
+- Added `TESTING.md` documentation
+
 ### v1.0.1 (2026-03-28)
 
 #### Tunnel Support
+
 - Added `allowedHosts: ['.trycloudflare.com']` to Vite config for frontend tunnel compatibility
 - Implemented CORS origin pattern matching for dynamic tunnel URLs (`.trycloudflare.com`, `.ngrok.io`, `.ngrok-free.app`, `.loca.lt`)
 - Enabled Socket.IO polling fallback for reliable WebSocket connections through tunnels
 - Extended ping timeout (60s) for slow tunnel connections
 
 #### Security Improvements
+
 - Added global error handler to prevent stack trace exposure in production
 - Implemented input validation for empty project names (returns proper 400 error)
 - Added CORS error handling with standardized 403 responses
 - JSON parsing errors return clean 400 responses without internal details
 
 #### API Enhancements
+
 - Added PUT method alias for `/api/projects/:name/steps/:stepNumber/status` endpoint
 - All API endpoints now have consistent error response format
 
 #### Testing
+
 - Client agent validation completed - all critical issues identified and fixed
 - Application approved for production use via tunnel access

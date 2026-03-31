@@ -1,6 +1,6 @@
 /**
  * Project State Helper
- * 
+ *
  * Utilities for reading and updating .project_state.json files
  */
 
@@ -14,7 +14,7 @@ const path = require('path');
  */
 async function readProjectState(projectPath) {
   const stateFile = path.join(projectPath, '.project_state.json');
-  
+
   try {
     const content = await fs.readFile(stateFile, 'utf8');
     return JSON.parse(content);
@@ -34,21 +34,21 @@ async function readProjectState(projectPath) {
  */
 async function updateProjectState(projectPath, updates) {
   const stateFile = path.join(projectPath, '.project_state.json');
-  
+
   // Read existing state
   const existing = await readProjectState(projectPath);
   if (!existing) {
     throw new Error(`Project state not found at ${projectPath}`);
   }
-  
+
   // Merge updates
   const updatedState = { ...existing, ...updates };
-  
+
   // Write back atomically
   const tempFile = `${stateFile}.tmp`;
   await fs.writeFile(tempFile, JSON.stringify(updatedState, null, 2));
   await fs.rename(tempFile, stateFile);
-  
+
   return updatedState;
 }
 
@@ -64,38 +64,77 @@ async function updateStepStatus(projectPath, stepId, newStatus) {
   if (!state) {
     throw new Error('Project state not found');
   }
-  
+
   if (!state.implementation_plan || !Array.isArray(state.implementation_plan)) {
     throw new Error('Implementation plan not found in project state');
   }
-  
-  const stepIndex = state.implementation_plan.findIndex(
-    s => String(s.step) === String(stepId)
-  );
-  
+
+  const stepIndex = state.implementation_plan.findIndex(s => String(s.step) === String(stepId));
+
   if (stepIndex === -1) {
     throw new Error(`Step ${stepId} not found`);
   }
-  
+
   const previousStatus = state.implementation_plan[stepIndex].status;
-  
+
   const updatedPlan = state.implementation_plan.map(step =>
-    String(step.step) === String(stepId)
-      ? { ...step, status: newStatus }
-      : step
+    String(step.step) === String(stepId) ? { ...step, status: newStatus } : step
   );
-  
+
   await updateProjectState(projectPath, { implementation_plan: updatedPlan });
-  
+
   return {
     updatedPlan,
     previousStatus,
-    stepId
+    stepId,
+  };
+}
+
+/**
+ * Update a step in implementation plan (general update)
+ * @param {string} projectPath - Path to project directory
+ * @param {string|number} stepId - Step identifier
+ * @param {Object} updates - Fields to update (task, status, etc.)
+ * @returns {Promise<Object>} - Updated step and plan metadata
+ */
+async function updateStep(projectPath, stepId, updates) {
+  const state = await readProjectState(projectPath);
+  if (!state) {
+    throw new Error('Project state not found');
+  }
+
+  if (!state.implementation_plan || !Array.isArray(state.implementation_plan)) {
+    throw new Error('Implementation plan not found in project state');
+  }
+
+  const stepIndex = state.implementation_plan.findIndex(s => String(s.step) === String(stepId));
+
+  if (stepIndex === -1) {
+    throw new Error(`Step ${stepId} not found`);
+  }
+
+  const previousStep = { ...state.implementation_plan[stepIndex] };
+
+  // Merge updates into the step (preserve step number)
+  const updatedStep = { ...previousStep, ...updates, step: previousStep.step };
+
+  const updatedPlan = state.implementation_plan.map(step =>
+    String(step.step) === String(stepId) ? updatedStep : step
+  );
+
+  await updateProjectState(projectPath, { implementation_plan: updatedPlan });
+
+  return {
+    updatedPlan,
+    previousStep,
+    updatedStep,
+    stepId,
   };
 }
 
 module.exports = {
   readProjectState,
   updateProjectState,
-  updateStepStatus
+  updateStepStatus,
+  updateStep,
 };

@@ -1,8 +1,16 @@
-import { GanttChart, Calendar, Clock, ArrowRight, CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import {
+  GanttChart,
+  Calendar,
+  Clock,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  Loader2,
+} from 'lucide-react';
 
 function TimelineView({ project }) {
   const implementationPlan = project.implementation_plan || [];
-  
+
   // Calculate timeline visualization
   const totalSteps = implementationPlan.length;
   const completedCount = implementationPlan.filter(s => s.status === 'done').length;
@@ -11,13 +19,13 @@ function TimelineView({ project }) {
   const statusColors = {
     done: 'bg-green-500',
     in_progress: 'bg-yellow-500',
-    pending: 'bg-gray-500'
+    pending: 'bg-gray-500',
   };
 
   const statusIcons = {
     done: <CheckCircle2 className="w-4 h-4 text-green-500" />,
     in_progress: <Loader2 className="w-4 h-4 text-yellow-500 animate-spin" />,
-    pending: <Circle className="w-4 h-4 text-gray-500" />
+    pending: <Circle className="w-4 h-4 text-gray-500" />,
   };
 
   return (
@@ -49,9 +57,9 @@ function TimelineView({ project }) {
           <div className="relative">
             {/* Progress Line Background */}
             <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-gray-700" />
-            
+
             {/* Progress Line Filled */}
-            <div 
+            <div
               className="absolute left-[19px] top-0 w-0.5 bg-gradient-to-b from-green-500 to-green-500/50 transition-all duration-500"
               style={{ height: `${progressPercentage}%` }}
             />
@@ -64,31 +72,39 @@ function TimelineView({ project }) {
                   <div className="relative z-10 flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 border-2 border-gray-700">
                     {statusIcons[step.status]}
                   </div>
-                  
+
                   {/* Content */}
-                  <div className={`flex-1 p-3 rounded-lg ${
-                    step.status === 'done' ? 'bg-gray-700/30' :
-                    step.status === 'in_progress' ? 'bg-yellow-900/20 border border-yellow-600/30' :
-                    'bg-gray-700/20'
-                  }`}>
+                  <div
+                    className={`flex-1 p-3 rounded-lg ${
+                      step.status === 'done'
+                        ? 'bg-gray-700/30'
+                        : step.status === 'in_progress'
+                          ? 'bg-yellow-900/20 border border-yellow-600/30'
+                          : 'bg-gray-700/20'
+                    }`}
+                  >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-mono text-gray-500">Step {step.step}</span>
                       <div className={`w-2 h-2 rounded-full ${statusColors[step.status]}`} />
                     </div>
-                    <p className={`text-sm ${step.status === 'done' ? 'text-gray-400' : 'text-white'}`}>
+                    <p
+                      className={`text-sm ${step.status === 'done' ? 'text-gray-400' : 'text-white'}`}
+                    >
                       {step.task}
                     </p>
                   </div>
-                  
+
                   {/* Duration Bar (visual mockup) */}
                   <div className="hidden lg:flex items-center gap-2 min-w-[120px]">
-                    <div 
+                    <div
                       className={`h-2 rounded-full ${
-                        step.status === 'done' ? 'bg-green-500' :
-                        step.status === 'in_progress' ? 'bg-yellow-500' :
-                        'bg-gray-600'
+                        step.status === 'done'
+                          ? 'bg-green-500'
+                          : step.status === 'in_progress'
+                            ? 'bg-yellow-500'
+                            : 'bg-gray-600'
                       }`}
-                      style={{ width: `${(step.step * 7 % 40) + 40}%` }}
+                      style={{ width: `${((step.step * 7) % 40) + 40}%` }}
                     />
                   </div>
                 </div>
@@ -117,7 +133,7 @@ function TimelineView({ project }) {
             'Milestone markers',
             'Critical path highlighting',
             'Resource allocation view',
-            'Progress forecasting'
+            'Progress forecasting',
           ].map((feature, index) => (
             <div key={index} className="flex items-center gap-2 text-gray-300">
               <ArrowRight className="w-4 h-4 text-cyan-400" />

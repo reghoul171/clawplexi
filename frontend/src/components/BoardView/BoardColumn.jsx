@@ -16,18 +16,20 @@ function BoardColumn({
   activeId,
   totalSteps,
   onEdit,
-  onDelete
+  onDelete,
+  onStatusChange,
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id,
     data: {
-      status: id
-    }
+      status: id,
+    },
   });
 
   return (
     <div
       ref={setNodeRef}
+      data-testid={`column-${id}`}
       className={`
         flex-1 min-w-[280px] bg-gray-800/50 rounded-xl border overflow-hidden
         transition-all duration-150
@@ -37,14 +39,9 @@ function BoardColumn({
     >
       {/* Header */}
       <div className={bgColor}>
-        <ColumnHeader
-          title={title}
-          count={steps.length}
-          icon={Icon}
-          iconColor={iconColor}
-        />
+        <ColumnHeader title={title} count={steps.length} icon={Icon} iconColor={iconColor} />
       </div>
-      
+
       {/* Cards container */}
       <div className="p-3 space-y-2 min-h-[200px] max-h-[400px] overflow-auto">
         {steps.map((step, index) => (
@@ -56,9 +53,10 @@ function BoardColumn({
             stepIndex={step.step - 1}
             onEdit={onEdit}
             onDelete={onDelete}
+            onStatusChange={onStatusChange}
           />
         ))}
-        
+
         {steps.length === 0 && (
           <div className="text-center text-gray-500 py-8">
             <p className="text-sm">No items</p>

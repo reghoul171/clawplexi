@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { 
-  CheckCircle2, 
-  Circle, 
-  Loader2, 
-  FileText, 
-  Download, 
-  Copy, 
+import {
+  CheckCircle2,
+  Circle,
+  Loader2,
+  FileText,
+  Download,
+  Copy,
   Check,
   Share2,
-  X
+  X,
 } from 'lucide-react';
 import { statusLabels } from '../constants/statusConfig';
 
@@ -19,7 +19,7 @@ function Implementation({ project }) {
   const statusIcons = {
     done: <CheckCircle2 className="w-5 h-5 text-green-500" />,
     in_progress: <Loader2 className="w-5 h-5 text-yellow-500 animate-spin" />,
-    pending: <Circle className="w-5 h-5 text-gray-500" />
+    pending: <Circle className="w-5 h-5 text-gray-500" />,
   };
 
   // Group steps by status
@@ -34,14 +34,14 @@ function Implementation({ project }) {
   // Generate markdown content
   const generateMarkdown = () => {
     const date = new Date().toISOString().split('T')[0];
-    
+
     let markdown = `# Implementation Plan: ${project.project_name}\n\n`;
     markdown += `**Progress:** ${project.progress_percentage}% Complete\n`;
     markdown += `**Editor:** ${project.editor_used}\n`;
     markdown += `**Generated:** ${date}\n\n`;
-    
+
     markdown += `## Implementation Steps\n\n`;
-    
+
     // Completed section
     if (completedSteps.length > 0) {
       markdown += `### ✅ Completed\n`;
@@ -50,7 +50,7 @@ function Implementation({ project }) {
       });
       markdown += `\n`;
     }
-    
+
     // In Progress section
     if (inProgressSteps.length > 0) {
       markdown += `### 🔄 In Progress\n`;
@@ -59,7 +59,7 @@ function Implementation({ project }) {
       });
       markdown += `\n`;
     }
-    
+
     // Pending section
     if (pendingSteps.length > 0) {
       markdown += `### ⏳ Pending\n`;
@@ -68,7 +68,7 @@ function Implementation({ project }) {
       });
       markdown += `\n`;
     }
-    
+
     // Decision Tree section
     if (project.decision_tree && project.decision_tree.length > 0) {
       markdown += `## Decision Tree\n`;
@@ -77,7 +77,7 @@ function Implementation({ project }) {
       });
       markdown += `\n`;
     }
-    
+
     // Test Summary section
     if (project.tests_generated && project.tests_generated.length > 0) {
       const passing = project.tests_generated.filter(t => t.status === 'passing').length;
@@ -86,7 +86,7 @@ function Implementation({ project }) {
       markdown += `## Test Summary\n`;
       markdown += `- Total: ${total} | Passing: ${passing} | Failing: ${failing}\n`;
     }
-    
+
     return markdown;
   };
 
@@ -116,26 +116,34 @@ function Implementation({ project }) {
 
   // Step Card Component
   const StepCard = ({ step, index }) => (
-    <div 
+    <div
       className={`flex items-start gap-3 p-4 rounded-lg transition-colors ${
-        step.status === 'done' ? 'bg-gray-700/50' : 
-        step.status === 'in_progress' ? 'bg-yellow-900/20 border border-yellow-600/30' : 
-        'bg-gray-700/30'
+        step.status === 'done'
+          ? 'bg-gray-700/50'
+          : step.status === 'in_progress'
+            ? 'bg-yellow-900/20 border border-yellow-600/30'
+            : 'bg-gray-700/30'
       }`}
     >
       {statusIcons[step.status]}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-gray-500 font-mono">Step {step.step}</span>
-          <span className={`text-xs px-2 py-0.5 rounded ${
-            step.status === 'done' ? 'bg-green-500/20 text-green-400' :
-            step.status === 'in_progress' ? 'bg-yellow-500/20 text-yellow-400' :
-            'bg-gray-600/50 text-gray-400'
-          }`}>
+          <span
+            className={`text-xs px-2 py-0.5 rounded ${
+              step.status === 'done'
+                ? 'bg-green-500/20 text-green-400'
+                : step.status === 'in_progress'
+                  ? 'bg-yellow-500/20 text-yellow-400'
+                  : 'bg-gray-600/50 text-gray-400'
+            }`}
+          >
             {statusLabels[step.status]}
           </span>
         </div>
-        <p className={`mt-1 ${step.status === 'done' ? 'text-gray-400 line-through' : 'text-white font-medium'}`}>
+        <p
+          className={`mt-1 ${step.status === 'done' ? 'text-gray-400 line-through' : 'text-white font-medium'}`}
+        >
           {step.task}
         </p>
       </div>
@@ -275,9 +283,7 @@ function Implementation({ project }) {
               <button
                 onClick={handleCopyToClipboard}
                 className={`flex items-center gap-2 px-4 py-2 ${
-                  copySuccess 
-                    ? 'bg-green-600 hover:bg-green-700' 
-                    : 'bg-blue-600 hover:bg-blue-700'
+                  copySuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
                 } text-white rounded-lg transition-colors`}
               >
                 {copySuccess ? (

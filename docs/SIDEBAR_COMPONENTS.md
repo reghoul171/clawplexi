@@ -83,19 +83,19 @@ Sidebar (index.jsx)
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `projects` | `Array<Project>` | Yes | Flat list of project objects from API |
-| `activeProject` | `Project \| null` | No | Currently selected project |
-| `onSelectProject` | `(project: Project) => void` | Yes | Callback when a project is selected |
-| `connected` | `boolean` | Yes | WebSocket connection status |
+| Prop              | Type                         | Required | Description                           |
+| ----------------- | ---------------------------- | -------- | ------------------------------------- |
+| `projects`        | `Array<Project>`             | Yes      | Flat list of project objects from API |
+| `activeProject`   | `Project \| null`            | No       | Currently selected project            |
+| `onSelectProject` | `(project: Project) => void` | Yes      | Callback when a project is selected   |
+| `connected`       | `boolean`                    | Yes      | WebSocket connection status           |
 
 #### State
 
-| State | Type | Initial | Description |
-|-------|------|---------|-------------|
-| `workspaceCollapsed` | `boolean` | `false` | Whether the workspace content is collapsed |
-| `expandedSpaces` | `Set<string>` | `new Set()` | Set of expanded space IDs |
+| State                | Type          | Initial     | Description                                |
+| -------------------- | ------------- | ----------- | ------------------------------------------ |
+| `workspaceCollapsed` | `boolean`     | `false`     | Whether the workspace content is collapsed |
+| `expandedSpaces`     | `Set<string>` | `new Set()` | Set of expanded space IDs                  |
 
 #### Usage Example
 
@@ -106,7 +106,7 @@ function App() {
   const [projects, setProjects] = useState([]);
   const [activeProject, setActiveProject] = useState(null);
   const [connected, setConnected] = useState(false);
-  
+
   return (
     <div className="flex">
       <Sidebar
@@ -131,14 +131,14 @@ function App() {
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `workspaceName` | `string` | Yes | Display name of the workspace |
-| `isCollapsed` | `boolean` | Yes | Whether workspace content is collapsed |
-| `onToggle` | `() => void` | Yes | Callback to toggle collapse state |
-| `projectCount` | `number` | Yes | Total number of projects |
-| `activeCount` | `number` | Yes | Number of active (in-progress) projects |
-| `completedCount` | `number` | Yes | Number of completed projects |
+| Prop             | Type         | Required | Description                             |
+| ---------------- | ------------ | -------- | --------------------------------------- |
+| `workspaceName`  | `string`     | Yes      | Display name of the workspace           |
+| `isCollapsed`    | `boolean`    | Yes      | Whether workspace content is collapsed  |
+| `onToggle`       | `() => void` | Yes      | Callback to toggle collapse state       |
+| `projectCount`   | `number`     | Yes      | Total number of projects                |
+| `activeCount`    | `number`     | Yes      | Number of active (in-progress) projects |
+| `completedCount` | `number`     | Yes      | Number of completed projects            |
 
 #### Usage Example
 
@@ -152,7 +152,7 @@ import WorkspaceHeader from './WorkspaceHeader';
   projectCount={10}
   activeCount={7}
   completedCount={3}
-/>
+/>;
 ```
 
 #### Features
@@ -173,25 +173,25 @@ import WorkspaceHeader from './WorkspaceHeader';
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `space` | `Space` | Yes | Space object with lists |
-| `isExpanded` | `boolean` | Yes | Whether this space is expanded |
-| `onToggle` | `() => void` | Yes | Callback to toggle expansion |
-| `activeListId` | `string \| null` | Yes | ID of currently active list |
-| `onSelectList` | `(list: List) => void` | Yes | Callback when a list is selected |
+| Prop           | Type                   | Required | Description                      |
+| -------------- | ---------------------- | -------- | -------------------------------- |
+| `space`        | `Space`                | Yes      | Space object with lists          |
+| `isExpanded`   | `boolean`              | Yes      | Whether this space is expanded   |
+| `onToggle`     | `() => void`           | Yes      | Callback to toggle expansion     |
+| `activeListId` | `string \| null`       | Yes      | ID of currently active list      |
+| `onSelectList` | `(list: List) => void` | Yes      | Callback when a list is selected |
 
 #### Space Interface
 
 ```typescript
 interface Space {
-  id: string;              // e.g., "space-MyProject"
-  name: string;            // Display name
-  icon: string;            // Icon name from lucide-react
-  color: string;           // Tailwind color class
-  lists: List[];           // Array of list items
-  progress: number;        // Overall progress percentage
-  editor: string;          // Editor used for this project
+  id: string; // e.g., "space-MyProject"
+  name: string; // Display name
+  icon: string; // Icon name from lucide-react
+  color: string; // Tailwind color class
+  lists: List[]; // Array of list items
+  progress: number; // Overall progress percentage
+  editor: string; // Editor used for this project
 }
 ```
 
@@ -221,15 +221,15 @@ import SpaceSection from './SpaceSection';
 
 The component maps icon names to lucide-react components:
 
-| Icon Name | Component | Use Case |
-|-----------|-----------|----------|
-| `FolderKanban` | FolderKanban | Default project |
-| `Code2` | Code2 | Development projects |
-| `FlaskConical` | FlaskConical | Testing projects |
-| `Lightbulb` | Lightbulb | Ideas/planning |
-| `FileText` | FileText | Documentation |
-| `Rocket` | Rocket | Deployment |
-| `Palette` | Palette | Design projects |
+| Icon Name      | Component    | Use Case             |
+| -------------- | ------------ | -------------------- |
+| `FolderKanban` | FolderKanban | Default project      |
+| `Code2`        | Code2        | Development projects |
+| `FlaskConical` | FlaskConical | Testing projects     |
+| `Lightbulb`    | Lightbulb    | Ideas/planning       |
+| `FileText`     | FileText     | Documentation        |
+| `Rocket`       | Rocket       | Deployment           |
+| `Palette`      | Palette      | Design projects      |
 
 ---
 
@@ -241,32 +241,32 @@ The component maps icon names to lucide-react components:
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `list` | `List` | Yes | List object with status info |
-| `isActive` | `boolean` | Yes | Whether this list is currently selected |
-| `onClick` | `() => void` | Yes | Callback when list is clicked |
+| Prop       | Type         | Required | Description                             |
+| ---------- | ------------ | -------- | --------------------------------------- |
+| `list`     | `List`       | Yes      | List object with status info            |
+| `isActive` | `boolean`    | Yes      | Whether this list is currently selected |
+| `onClick`  | `() => void` | Yes      | Callback when list is clicked           |
 
 #### List Interface
 
 ```typescript
 interface List {
-  id: string;              // e.g., "impl-MyProject"
-  name: string;            // Display name (e.g., "Implementation")
-  itemCount: number;       // Total items in list
-  completedCount: number;  // Completed items
+  id: string; // e.g., "impl-MyProject"
+  name: string; // Display name (e.g., "Implementation")
+  itemCount: number; // Total items in list
+  completedCount: number; // Completed items
   status: 'done' | 'in_progress' | 'pending';
-  project: Project;        // Reference to original project
+  project: Project; // Reference to original project
 }
 ```
 
 #### Status Configuration
 
-| Status | Icon | Color | Description |
-|--------|------|-------|-------------|
-| `done` | CheckCircle2 | green-400 | All items completed |
-| `in_progress` | Clock | blue-400 | Some items completed |
-| `pending` | Circle | gray-400 | No items completed |
+| Status        | Icon         | Color     | Description          |
+| ------------- | ------------ | --------- | -------------------- |
+| `done`        | CheckCircle2 | green-400 | All items completed  |
+| `in_progress` | Clock        | blue-400  | Some items completed |
+| `pending`     | Circle       | gray-400  | No items completed   |
 
 #### Usage Example
 
@@ -280,11 +280,11 @@ import ListTree from './ListTree';
     itemCount: 10,
     completedCount: 7,
     status: 'in_progress',
-    project: projectObject
+    project: projectObject,
   }}
   isActive={activeListId === 'impl-my-project'}
   onClick={() => onSelectList(list)}
-/>
+/>;
 ```
 
 ---
@@ -297,20 +297,17 @@ import ListTree from './ListTree';
 
 #### Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `connected` | `boolean` | Yes | WebSocket connection status |
-| `onSettingsClick` | `() => void` | No | Callback for settings button click |
+| Prop              | Type         | Required | Description                        |
+| ----------------- | ------------ | -------- | ---------------------------------- |
+| `connected`       | `boolean`    | Yes      | WebSocket connection status        |
+| `onSettingsClick` | `() => void` | No       | Callback for settings button click |
 
 #### Usage Example
 
 ```jsx
 import SidebarFooter from './SidebarFooter';
 
-<SidebarFooter
-  connected={true}
-  onSettingsClick={() => openSettings()}
-/>
+<SidebarFooter connected={true} onSettingsClick={() => openSettings()} />;
 ```
 
 #### Features
@@ -335,15 +332,16 @@ import SidebarFooter from './SidebarFooter';
 Transforms a flat array of projects into a hierarchical workspace structure.
 
 **Parameters:**
+
 - `projects: Array<Project>` - Flat list of project objects
 
 **Returns:** `Workspace` object with structure:
 
 ```typescript
 interface Workspace {
-  name: string;           // Always "PM Dashboard"
-  spaces: Space[];        // Array of space objects
-  totalProjects: number;  // Count of all projects
+  name: string; // Always "PM Dashboard"
+  spaces: Space[]; // Array of space objects
+  totalProjects: number; // Count of all projects
   activeProjects: number; // Count of incomplete projects
   completedProjects: number; // Count of completed projects
 }
@@ -353,11 +351,11 @@ interface Workspace {
 
 For each project, the function generates up to 3 lists:
 
-| List Type | Source Data | ID Format |
-|-----------|-------------|-----------|
-| Implementation | `implementation_plan` array | `impl-{projectName}` |
-| Tests | `tests_generated` array | `tests-{projectName}` |
-| Decisions | `decision_tree` array | `decisions-{projectName}` |
+| List Type      | Source Data                 | ID Format                 |
+| -------------- | --------------------------- | ------------------------- |
+| Implementation | `implementation_plan` array | `impl-{projectName}`      |
+| Tests          | `tests_generated` array     | `tests-{projectName}`     |
+| Decisions      | `decision_tree` array       | `decisions-{projectName}` |
 
 If no data exists, a default "Main" list is created.
 
@@ -366,6 +364,7 @@ If no data exists, a default "Main" list is created.
 Finds the original project from a list ID.
 
 **Parameters:**
+
 - `projects: Array<Project>` - Flat list of projects
 - `listId: string` - The list ID to look up
 
@@ -380,6 +379,7 @@ Finds the original project from a list ID.
 All components use Tailwind CSS utility classes following these patterns:
 
 ### Colors
+
 - Background: `bg-gray-800`, `bg-gray-700`
 - Borders: `border-gray-700`
 - Text: `text-white`, `text-gray-200`, `text-gray-400`, `text-gray-500`
@@ -387,11 +387,13 @@ All components use Tailwind CSS utility classes following these patterns:
 - Status: `text-green-400` (done), `text-blue-400` (in_progress), `text-red-400` (error)
 
 ### Animations
+
 - Transitions: `transition-all duration-200`
 - Easing: `ease-in-out`
 - Height collapse: `max-h-0` / `max-h-96` with overflow-hidden
 
 ### Layout
+
 - Sidebar width: `w-72` (288px)
 - Indentation: Lists use `pl-9` for indentation under spaces
 
@@ -412,7 +414,7 @@ const [expandedSpaces, setExpandedSpaces] = useState(() => new Set());
 State updates use functional updates to ensure correctness:
 
 ```jsx
-const toggleSpace = (spaceId) => {
+const toggleSpace = spaceId => {
   setExpandedSpaces(prev => {
     const next = new Set(prev);
     if (next.has(spaceId)) {

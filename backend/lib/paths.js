@@ -1,6 +1,6 @@
 /**
  * Path Resolution Module
- * 
+ *
  * Centralizes all path resolution for the PM Dashboard.
  * Supports ~ expansion, environment variables, and config file overrides.
  */
@@ -17,7 +17,7 @@ const DEFAULT_PATHS = {
   stateFile: '~/.openclaw/pm-dashboard/state.db',
   logsDir: '~/.openclaw/pm-dashboard/logs',
   configFile: '~/.openclaw/pm-dashboard/config.json',
-  projectsStateDir: '~/.openclaw/pm-dashboard/projects'
+  projectsStateDir: '~/.openclaw/pm-dashboard/projects',
 };
 
 /**
@@ -28,7 +28,7 @@ const ENV_MAPPINGS = {
   stateFile: 'PM_DASHBOARD_STATE_FILE',
   logsDir: 'PM_DASHBOARD_LOGS_DIR',
   configFile: 'PM_DASHBOARD_CONFIG_FILE',
-  projectsStateDir: 'PM_DASHBOARD_PROJECTS_STATE_DIR'
+  projectsStateDir: 'PM_DASHBOARD_PROJECTS_STATE_DIR',
 };
 
 /**
@@ -39,17 +39,17 @@ const ENV_MAPPINGS = {
  */
 function resolvePath(p, basePath) {
   if (!p) return p;
-  
+
   // Expand ~ to home directory
   if (p.startsWith('~/')) {
     return path.join(os.homedir(), p.slice(2));
   }
-  
+
   // Already absolute
   if (path.isAbsolute(p)) {
     return p;
   }
-  
+
   // Relative to basePath or cwd
   const base = basePath || process.cwd();
   return path.resolve(base, p);
@@ -61,17 +61,17 @@ function resolvePath(p, basePath) {
  * 1. Environment variables
  * 2. Config file
  * 3. Defaults
- * 
+ *
  * @param {Object} [config] - Configuration object from config file
  * @returns {Object} - Resolved paths
  */
 function getPaths(config = {}) {
   const pathsConfig = config.paths || {};
   const result = {};
-  
+
   for (const [key, defaultPath] of Object.entries(DEFAULT_PATHS)) {
     let resolvedPath;
-    
+
     // Check environment variable first
     const envVar = ENV_MAPPINGS[key];
     if (envVar && process.env[envVar]) {
@@ -85,10 +85,10 @@ function getPaths(config = {}) {
     else {
       resolvedPath = defaultPath;
     }
-    
+
     result[key] = resolvePath(resolvedPath);
   }
-  
+
   return result;
 }
 
@@ -101,9 +101,9 @@ function ensureDirectories(paths) {
     paths.logsDir,
     path.dirname(paths.stateFile),
     path.dirname(paths.configFile),
-    paths.projectsStateDir
+    paths.projectsStateDir,
   ];
-  
+
   for (const dir of dirsToCreate) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -127,11 +127,11 @@ function getOpenClawHome() {
  */
 function getSharedProjectPath() {
   const openclawConfigPath = path.join(getOpenClawHome(), 'openclaw.json');
-  
+
   try {
     if (fs.existsSync(openclawConfigPath)) {
       const config = JSON.parse(fs.readFileSync(openclawConfigPath, 'utf8'));
-      
+
       // Check if agents.defaults.workspace exists and derive shared-project
       if (config.agents?.defaults?.workspace) {
         // Typically workspace is ~/.openclaw/workspace, shared-project is sibling
@@ -146,7 +146,7 @@ function getSharedProjectPath() {
   } catch (error) {
     console.warn('[Paths] Could not read OpenClaw config:', error.message);
   }
-  
+
   // Fall back to default
   return resolvePath(DEFAULT_PATHS.projectsDir);
 }
@@ -167,5 +167,5 @@ module.exports = {
   getSharedProjectPath,
   isOpenClawEnvironment,
   DEFAULT_PATHS,
-  ENV_MAPPINGS
+  ENV_MAPPINGS,
 };

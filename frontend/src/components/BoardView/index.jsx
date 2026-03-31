@@ -5,7 +5,7 @@ import {
   KeyboardSensor,
   useSensor,
   useSensors,
-  closestCenter
+  closestCenter,
 } from '@dnd-kit/core';
 import { Kanban, Circle, Loader2, CheckCircle2 } from 'lucide-react';
 
@@ -17,12 +17,15 @@ import { TaskCardEditor } from './TaskCardEditor';
 
 /**
  * BoardView - Interactive Kanban board with drag & drop
+ * @param {Object} project - Current project data
+ * @param {Function} onProjectUpdate - Callback to update parent project state
  */
-function BoardView({ project }) {
+function BoardView({ project, onProjectUpdate }) {
   const [activeId, setActiveId] = useState(null);
-  
-  const { steps, handleDragEnd, isUpdating, error, clearError } = useStepDrag(project);
-  
+
+  const { steps, handleDragEnd, handleStatusChange, isUpdating, error, clearError } =
+    useStepDrag(project, onProjectUpdate);
+
   // Step editor hook
   const {
     editingStep,
@@ -32,8 +35,8 @@ function BoardView({ project }) {
     cancelEdit,
     saveEdit,
     isSaving,
-    error: editError
-  } = useStepEditor(project);
+    error: editError,
+  } = useStepEditor(project, onProjectUpdate);
 
   // Configure sensors for drag detection
   const sensors = useSensors(
@@ -50,7 +53,7 @@ function BoardView({ project }) {
     const pending = steps.filter(s => s.status === 'pending' || !s.status);
     const inProgress = steps.filter(s => s.status === 'in_progress');
     const done = steps.filter(s => s.status === 'done');
-    
+
     return { pending, inProgress, done };
   }, [steps]);
 
@@ -67,12 +70,12 @@ function BoardView({ project }) {
   }, [editingStep, steps]);
 
   // Handle drag start
-  const handleDragStart = (event) => {
+  const handleDragStart = event => {
     setActiveId(String(event.active.id));
   };
 
   // Handle drag end
-  const onDragEnd = (event) => {
+  const onDragEnd = event => {
     setActiveId(null);
     handleDragEnd(event);
   };
@@ -83,22 +86,18 @@ function BoardView({ project }) {
   };
 
   // Handle delete step
-  const handleDelete = (step) => {
+  const handleDelete = step => {
     // For now, just log - delete functionality can be added later
     console.log('Delete step:', step);
     // TODO: Implement delete with confirmation modal
   };
 
   if (!project) {
-    return (
-      <div className="text-center text-gray-400 py-12">
-        No project selected
-      </div>
-    );
+    return <div className="text-center text-gray-400 py-12">No project selected</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="board-view">
       {/* Header */}
       <div className="bg-gradient-to-r from-violet-900/30 to-blue-900/30 rounded-xl p-6 border border-violet-500/30">
         <div className="flex items-center gap-4">
@@ -118,10 +117,7 @@ function BoardView({ project }) {
       {error && (
         <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 flex items-center justify-between">
           <span className="text-red-300">{error}</span>
-          <button
-            onClick={clearError}
-            className="text-red-400 hover:text-white transition-colors"
-          >
+          <button onClick={clearError} className="text-red-400 hover:text-white transition-colors">
             ✕
           </button>
         </div>
@@ -149,8 +145,9 @@ function BoardView({ project }) {
             totalSteps={steps.length}
             onEdit={startEdit}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
           />
-          
+
           {/* In Progress Column */}
           <BoardColumn
             id="in_progress"
@@ -164,8 +161,9 @@ function BoardView({ project }) {
             totalSteps={steps.length}
             onEdit={startEdit}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
           />
-          
+
           {/* Done Column */}
           <BoardColumn
             id="done"
@@ -179,6 +177,7 @@ function BoardView({ project }) {
             totalSteps={steps.length}
             onEdit={startEdit}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
           />
         </div>
 
